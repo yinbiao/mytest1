@@ -1,0 +1,719 @@
+<template>
+  <view class="container">
+    <view class="zan-panel">
+      <view class="zan-cell zan-field wrapped">
+        <view class="zan-cell__hd zan-field__title">
+          <text class="zan-icon zan-icon-member-day-privilege"></text> 公司名称
+          <text class='red'>*</text>
+        </view>
+        <input type="text" disabled='edit' focus="" value="{{company.companyName}}" placeholder="请输入公司名称" class="zan-field__input zan-cell__bd" placeholder-class="zan-field__placeholder" bindinput="companyNameChange" data-component-id="" />
+      </view>
+      <view class="zan-cell zan-cell--access" @tap="">
+        <view class="zan-cell__bd">
+          <text class="zan-icon zan-icon-add-o"></text> 所在区域
+          <text class='red'>*</text> {{company.locateName||''}}</view>
+        <!-- <view class="zan-cell__ft"></view> -->
+      </view>
+      <view class="zan-cell zan-field wrapped">
+        <view class="zan-cell__hd zan-field__title">
+          <text class="zan-icon zan-icon-location"></text> 办公地址
+          <text class='red'>*</text>
+        </view>
+        <input type="text" disabled='edit' value="{{company.companyAddress}}" placeholder="请输入办公地址" class="zan-field__input zan-cell__bd" placeholder-class="zan-field__placeholder" bindinput="companyAddressChange" data-component-id="" />
+      </view>
+      <!-- 中介有经营区域范围 -->
+      <view class="zan-cell zan-cell--access" wx:if="{{company.departmentNum ==2}}" >
+        <view class="zan-cell__bd">
+          <text class="zan-icon zan-icon-add-o"></text> 经营区域
+          <text class='red'>*</text> {{company.disctictOfBusinessNames||''}}</view>
+        <view class="zan-cell__ft"></view>
+      </view>
+      <view class="zan-cell zan-field wrapped">
+        <view class="zan-cell__hd zan-field__title">
+          <text class="zan-icon zan-icon-contact"></text> 负责人姓名
+          <text class='red'>*</text>
+        </view>
+        <input type="text"  disabled='edit' value="{{company.userName}}" placeholder="请输入姓名" class="zan-field__input zan-cell__bd" placeholder-class="zan-field__placeholder" bindinput="nameChange" data-component-id="" />
+      </view>
+      <view class="zan-cell zan-field wrapped">
+        <view class="zan-cell__hd zan-field__title">
+          <text class="zan-icon zan-icon-phone"></text> 负责人手机号
+          <text class='red'>*</text>
+        </view>
+        <input type="text"  disabled='edit' value="{{company.userPhoneNum}}" focus="" class="zan-field__input zan-cell__bd" required placeholder-class="zan-field__placeholder" />
+        <!-- <view class="zan-cell__ft">
+          <button class="zan-btn zan-btn--mini zan-btn--primary" open-type="getPhoneNumber" bindgetphonenumber="getPhoneNumber">授权获取手机号</button>
+        </view> -->
+      </view>
+      <view class="zan-cell zan-field wrapped">
+        <view class="_sex">
+          <!-- <radio-group class="radio-group" bindchange="roleRadioChange"> -->
+            <text class="zan-icon zan-icon-member-day-privilege"></text>
+            <view style='margin:0 10px 0 5px;display: inline-block;'> 公司类型
+              <text class='red'>*</text>
+            </view>
+            <label class="radio">
+              <!-- 1楼盘，2中介，3平台 -->
+              {{company.departmentNum==1?'楼盘':company.departmentNum==2?'中介':'平台'}}
+            </label>
+          <!-- </radio-group> -->
+        </view>
+      </view>
+      <view class="zan-cell zan-cell--access" @tap="">
+        <view class="zan-cell__bd">
+          <text class="zan-icon zan-icon-add-o"></text> 维护人</view>
+        <view class="">{{company.platformUserName}}</view>
+      </view>
+      <!-- <picker bindchange="platformUserChanged" value="{{index}}" range-key="nickName" range="{{platformUsers}}">
+        <view class="zan-cell zan-field wrapped">
+          <view class="zan-cell__hd zan-field__title"><text class="zan-icon zan-icon-edit-data"></text> 与您接洽的平台业务员</view>
+          <view class="zan-field__input zan-cell__bd list_item_arrow">
+            {{platformUsers[index].nickName}}
+            <view class="icon-arrow-right"></view>
+          </view>
+        </view>
+      </picker> -->
+    </view>
+    <view>
+      <view class="zan-panel" style='background: transparent;'>
+       
+        <!-- <view class="zan-btns">
+          <button class="zan-btn zan-btn--primary" @tap="chooseBusLicenseImage"> + 营业执照
+            <text class='red'>*</text>
+          </button>
+        </view> -->
+        <view class="imageLicense" style='margin-bottom: 30px;'>
+          <view class="zan-cell zan-field wrapped">
+            <repeat for="{{company.busLicenseImage}}">
+              <image src="{{company.busLicenseImage[index]}}"></image>
+            </repeat>
+          </view>
+        </view>
+      </view>
+    </view>
+    <!-- <view class="zan-btns registerSubmit">
+      <button class="zan-btn" @tap="formSubmit">提交</button>
+    </view> -->
+  </view>
+  <view class=" {{ showBottomPopup ? 'showChoosedGeo' : 'hideChoosedGeo'}}">
+    <!-- <view class="zan-popup__mask" @tap.capture.stop="toggleBottomPopup"></view> -->
+    <ChooseGeoMultiple @choosedGeo='choosedGeo' />
+  </view>
+  <view class=" {{ showBottomPopup2 ? 'showChoosedGeo' : 'hideChoosedGeo'}}">
+    <!-- <view class="zan-popup__mask" @tap.capture.stop="toggleBottomPopup"></view> -->
+    <ChooseGeo @choosedGeo="choosedGeo2" multiple="0" />
+  </view>
+</template>
+<script>
+import wepy from 'wepy'
+import http from '../utils/http.js'
+import util from '../utils/util.js'
+import ChooseGeoMultiple from '../components/chooseGeoMultiple'
+import ChooseGeo from '../components/chooseGeoMultiple'
+export default class FindCompanyDetail extends wepy.page {
+  config = {
+    navigationBarTitleText: '企业详情',
+    enablePullDownRefresh: true,
+    backgroundTextStyle: 'dark',
+    backgroundColor: '#ffffff'
+  }
+
+  components = {
+    ChooseGeoMultiple,
+    ChooseGeo
+  }
+
+
+  events = {
+
+    // platformUserChanged(e) {
+    //   this.platformUserId = this.platformUsers[e.detail.value].id
+    // },
+    choosedGeo(choosed) {
+      this.showBottomPopup = false
+      this.region[0] = choosed.province.shortName
+      this.region[1] = choosed.city.shortName
+      this.region[2] = Object.values(choosed.district).map(v => { return v.shortName }).join('、')
+      this.disctictOfBusiness = Object.keys(choosed.district).toString()
+      this.disctictOfBusinessNames = Object.values(choosed.district).map(v => {
+        return v.shortName
+      }).toString()
+
+      console.log('register choosedGeo ===>', choosed)
+    },
+    choosedGeo2(choosed) {
+      this.showBottomPopup2 = false
+      console.log(this.showBottomPopup2, '====this.showBottomPopup2')
+      this.region2[0] = choosed.province.shortName
+      this.region2[1] = choosed.city.shortName
+      this.region2[2] = Object.values(choosed.district).map(v => { return v.shortName }).join('、')
+      this.disctictOfBusiness2 = Object.keys(choosed.district).toString()
+      this.disctictOfBusiness2Names = Object.values(choosed.district).toString()
+
+      console.log('register choosedGeo2 ===>', choosed)
+    }
+  }
+  computed = {
+    userSelfInfo() {
+      return this.$parent.globalData.userInfo
+    }
+  }
+
+  data = {
+    edit:true,
+    company:{},
+
+    platformUserId: 1,
+    platformUsers: [],
+    disctictOfBusiness: '',
+    items: [], //{id,value}
+    showBottomPopup: false,
+    showBottomPopup2: false,
+    index: 0,
+    region: [],
+    region2: [],
+    customItem: '全部',
+    platformUserName: '',
+
+    // userSelfInfo: {
+    //   nickName: '',
+    //   avatarUrl: '',
+    //   gender: '',
+    //   country: '',
+    //   province: '',
+    //   city: '',
+    //   phoneNum
+    // },
+    name: '',
+    userInfo: {
+      departmentNum: 1, //0游客 1开发商 2中介 3平台
+      name: '',
+      //phoneNum: '',
+      companyName: '',
+      companyAddress: '',
+      busLicenseImage: [],
+      localBusLicenseImage: [],
+
+      phoneNum: ''
+    },
+    roleItems: [
+      // { name: '0', value: '我是员工', checked: 'true' },
+      { name: '1', value: '楼盘', checked: 'true' },
+      { name: '2', value: '中介' },
+    ]
+  }
+
+
+
+  methods = {
+    addServicer() {
+      const _this = this
+      wx.showModal({
+        title: '提示',
+        content: '请扫描维护人二维码',
+        confirmText: '开始扫描',
+        success: function(res) {
+          if (res.confirm) {
+            // 允许从相机和相册扫码
+            wx.scanCode({
+              success: (res) => {
+                console.log(res)
+
+                const platformUser = JSON.parse(res.result)
+                _this.platformUserId = platformUser.id
+                _this.platformUserName = platformUser.name
+                _this.$apply()
+
+              }
+            })
+          } else if (res.cancel) {
+            console.log('用户点击取消')
+          }
+        }
+      })
+    },
+    toggleBottomPopup() {
+      this.showBottomPopup = !this.showBottomPopup
+    },
+    toggleBottomPopup2() {
+      this.showBottomPopup2 = !this.showBottomPopup2
+    },
+
+    goToIndex() {
+      wx.reLaunch({
+        url: './find_home'
+      })
+    },
+    chooseBusLicenseImage() {
+      console.log(util)
+      const _this = this
+      util.chooseImagesAndUpload({
+        success(res, data) {
+          console.log('data.path = > ', data.path)
+          //res.data为上传图片的单张服务端返回地址，data.path为选择图片的本地文件路径
+          _this.userInfo.localBusLicenseImage = data.path
+          _this.$apply() //非表单绑定，需要this.$apply()触发脏检查
+          _this.userInfo.busLicenseImage.push(res.data)
+          console.log('chooseImagesAndUpload => ', res)
+        }
+      })
+
+    },
+    // getPhoneNumber: function(e) {
+
+    //   const { iv, encryptedData } = e.detail
+
+    //   const data = {
+    //     keys: 'phoneNumber',
+    //     encryptedData,
+    //     iv
+    //   }
+
+    //   const _this = this
+    //   http.post('/user/decryptData', data)
+    //     .success(r => {
+    //       //_this.$parent.globalData.userInfo.phoneNum=r.data.phoneNumber
+
+    //       this.userInfo.phoneNum = r.data.phoneNumber
+    //       wx.showToast({
+    //         title: '授权成功',
+    //         icon: 'warn',
+    //         duration: 3000
+    //       })
+    //       this.$apply()
+    //     })
+
+
+    // },
+    nameChange(e) {
+      this.userInfo.name = e.detail.value
+    },
+    companyNameChange(e) {
+      this.userInfo.companyName = e.detail.value
+    },
+    companyAddressChange(e) {
+      this.userInfo.companyAddress = e.detail.value
+    },
+    roleRadioChange(e) {
+      this.userInfo.departmentNum = e.detail.value;
+    },
+    formSubmit() {
+      // if (this.userInfo.phoneNum.length < 8) {
+      //   wx.showToast({
+      //     title: '须授权手机号',
+      //     icon: 'success',
+      //     duration: 2000
+      //   })
+      //   return;
+      // }
+      const u = this.userInfo;
+      const _params1 = {
+        name: u.name,
+        //headUrl: this.userSelfInfo.avatarUrl,
+        //phoneNum: u.phoneNum,
+        //state: '1', // 审核状态枚举1正常 2审核中 3退回 4审核通过
+        departmentNum: u.departmentNum || 1, // 0游客 1开发商 2中介 3平台 > departmentNum
+      }
+
+      // if (u.departmentNum == 0) {
+      //   //仅授权更新手机号
+      //   http.post('/user/updateUserPhone', _params1)
+      //     .success((res) => {
+      //       wx.showModal({
+      //         title: '手机号授权更新成功',
+      //         content: res.data.code == 1 ? res.data.message : '请联系您所在企业主管为您开通权限~~',
+      //         success: res => { wx.reLaunch({ url: './find_home' }) }
+      //       })
+      //     })
+      //   return;
+      // }
+
+
+      const _params2 = {
+        //role: '1', //1管理 2经理 3业务员
+        companyName: u.companyName,
+        companyAddress: u.companyAddress,
+        busLicenseImage: u.busLicenseImage.join(),
+        disctictOfBusiness: this.disctictOfBusiness,
+        disctictOfBusinessNames: this.disctictOfBusinessNames,
+
+        platformUserId: this.platformUserId,
+        provice: this.region2[0],
+        city: this.region2[1],
+        district: this.region2[2],
+      }
+      // const _params3 = _params1.concat(_params2)
+      const _params3 = {
+        ..._params1,
+        ..._params2
+      }
+
+      // console.log(_params3, '_params3====')
+      //校验数据 start
+      const validation = {
+
+        companyName: '公司名称必填！',
+        companyAddress: '公司地址必填！',
+        departmentNum: '公司类型必选！',
+        // disctictOfBusiness: '经营区域必选！',
+        // disctictOfBusinessNames: '',
+        name: '负责人姓名必填！',
+        provice: '省必选！',
+        city: '城市必选！',
+        district: '区域必选！',
+        busLicenseImage: '营业执照必须上传！',
+
+        // platformUserId: '',
+      }
+      if (_params3.departmentNum == 2) {
+        validation['disctictOfBusiness'] = '经营区域必选！'
+      }
+
+      const isValid = Object.keys(validation).every(k => {
+        if (_params3[k] == undefined || _params3[k] == '') {
+          wx.showModal({
+            title: '提示',
+            content: validation[k]
+          })
+          return false
+        } else {
+          return true
+        }
+      })
+      if (!isValid) { return }
+      //校验数据 end
+
+
+      http.post('/user/register', _params3)
+        .success((res) => {
+          wx.showModal({
+            title: '申请入驻提交',
+            content: res.data.code == 1 ? res.data.message : '申请入驻提交成功，平台会尽快审核反馈~~',
+            success: res => { wx.navigateBack() }
+          })
+        })
+      //
+    }
+
+
+  }
+
+  onPullDownRefresh() {
+    console.log('onPullDownRefresh')
+    wx.stopPullDownRefresh()
+  }
+
+  onLoad(params) {
+    http.get('/user/companyDetail',{companyId:params.companyId}).success((res) => {
+      this.company = res.data[0]||{}
+      this.$apply()
+    })
+
+
+    // http.get('/user/district').success((res) => {
+    //   this.items = res.data
+    //   this.$apply()
+    // })
+    
+  }
+
+
+}
+
+</script>
+<style lang="less">
+.registerSubmit {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  button {
+    color: #4b0;
+  }
+}
+
+.showChoosedGeo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+}
+
+.hideChoosedGeo {
+  display: none;
+}
+
+.city {
+  margin: 20rpx;
+}
+
+.district {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 10rpx;
+  label {
+    display: block;
+    margin: 20rpx;
+    white-space: nowrap;
+  }
+}
+
+.popup-example--center {
+  border-radius: 4px;
+}
+
+.popup-example--right .zan-popup__container {
+  top: 0;
+  bottom: 0;
+}
+
+.popup-example--left .zan-popup__container {
+  top: 0;
+  bottom: 0;
+}
+
+.popup-example--top .zan-popup__container {
+  left: 0;
+  right: 0;
+  padding: 15px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  font-size: 16px;
+}
+
+.popup-example--top .zan-popup__mask {
+  opacity: 0;
+}
+
+.popup-example--bottom .zan-popup__container {
+  left: 0;
+  right: 0;
+}
+
+
+.imageLicense {
+  width: 100%;
+  height: 80px;
+  image {
+    width: 80px;
+    height: 80px;
+  }
+}
+
+.radio-group label {
+  margin-right: 20px;
+}
+
+._sex {
+  display: block;
+  margin: 6px 0;
+}
+
+.zan-cell {
+  position: relative;
+  padding: 12px 15px;
+  display: flex;
+  align-items: center;
+  line-height: 1.4;
+  font-size: 14px
+}
+
+.zan-cell::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 200%;
+  transform: scale(.5);
+  transform-origin: 0 0;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 0 solid #e5e5e5;
+  border-bottom-width: 1px;
+  left: 15px;
+  right: 0
+}
+
+.zan-cell__icon {
+  margin-right: 5px
+}
+
+.zan-cell__bd {
+  flex: 1
+}
+
+.zan-cell__text {
+  line-height: 24px;
+  font-size: 14px
+}
+
+.zan-cell__desc {
+  line-height: 1.2;
+  font-size: 12px;
+  color: #666
+}
+
+.zan-cell__ft {
+  position: relative;
+  text-align: right;
+  color: #666
+}
+
+.zan-cell__no-pading {
+  padding: 0
+}
+
+.zan-cell__no-pading .zan-cell__bd_padding {
+  padding: 12px 0 12px 15px
+}
+
+.zan-cell__no-pading .zan-cell__bd_padding .zan-form__input {
+  height: 26px
+}
+
+.zan-cell__no-pading .zan-cell__ft_padding {
+  padding: 12px 15px 12px 0
+}
+
+.zan-cell--last-child::after,
+.zan-cell:last-child::after {
+  display: none
+}
+
+.zan-cell--access .zan-cell__ft {
+  padding-right: 13px
+}
+
+.zan-cell--access .zan-cell__ft::after {
+  position: absolute;
+  top: 50%;
+  right: 2px;
+  content: " ";
+  display: inline-block;
+  height: 6px;
+  width: 6px;
+  border-width: 2px 2px 0 0;
+  border-color: #c8c8c8;
+  border-style: solid;
+  transform: translateY(-50%) matrix(.71, .71, -.71, .71, 0, 0)
+}
+
+.zan-cell--switch {
+  padding-top: 6px;
+  padding-bottom: 6px
+}
+
+.zan-field {
+  padding: 7px 15px;
+  color: #333
+}
+
+.zan-field--wrapped {
+  margin: 0 15px;
+  background-color: #fff
+}
+
+.zan-field--wrapped::after {
+  left: 0;
+  border-width: 1px;
+  border-radius: 4px
+}
+
+.zan-field.zan-field--wrapped::after {
+  display: block
+}
+
+.zan-field--wrapped+.zan-field--wrapped {
+  margin-top: 10px
+}
+
+.zan-field--error {
+  color: #f40
+}
+
+.zan-field--wrapped.zan-field--error::after {
+  border-color: #f40
+}
+
+.zan-field__title {
+  color: #333;
+  min-width: 65px;
+  padding-right: 10px
+}
+
+.zan-field__input {
+  flex: 1;
+  line-height: 1.6;
+  padding: 4px 0;
+  min-height: 22px;
+  height: auto;
+  font-size: 14px
+}
+
+.zan-field__placeholder {
+  font-size: 14px
+}
+
+.zan-field__input--right {
+  text-align: right
+}
+
+.zan-stepper {
+  color: #666
+}
+
+.zan-stepper view {
+  display: inline-block;
+  line-height: 20px;
+  padding: 5px 0;
+  text-align: center;
+  min-width: 40px;
+  box-sizing: border-box;
+  vertical-align: middle;
+  font-size: 12px;
+  border: 1rpx solid #999
+}
+
+.zan-stepper .zan-stepper__minus {
+  border-right: none;
+  border-radius: 2px 0 0 2px
+}
+
+.zan-stepper .zan-stepper__text {
+  border: 1rpx solid #999;
+  display: inline-block;
+  text-align: center;
+  vertical-align: middle;
+  height: 30px;
+  width: 40px;
+  min-height: auto;
+  font-size: 12px;
+  line-height: 30px
+}
+
+.zan-stepper .zan-stepper__plus {
+  border-left: none;
+  border-radius: 0 2px 2px 0
+}
+
+.zan-stepper .zan-stepper--disabled {
+  background: #f8f8f8;
+  color: #bbb;
+  border-color: #e8e8e8
+}
+
+.zan-stepper--small view {
+  min-width: 36px;
+  line-height: 18px
+}
+
+.zan-stepper--small .zan-stepper__text {
+  width: 36px;
+  line-height: 28px;
+  height: 28px
+}
+
+</style>

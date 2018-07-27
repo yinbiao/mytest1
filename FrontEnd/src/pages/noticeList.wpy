@@ -1,0 +1,132 @@
+<template>
+  <view class="container">
+    <repeat for="{{noticeItem}}">
+      <view class="noticeItem {{item.readed?'':'unread'}}" @tap='tapNoticeItem({{item}},{{index}})'>
+        <!-- 订单状态通知类 -->
+        <view style='display: flex;justify-content:flex-end;'>{{item.timestamp}}</view>
+        <text>{{item.msg}}</text>
+        <view class="zan-arrow" wx:if="{{item.showArrow}}"></view>
+      </view>
+      <!-- <view class='noticeItem unread' @tap='tapNoticeItem({{item}})'>
+        订单状态通知类
+        <view>2018-03-08 15:17</view>
+        <text>来自【（区域）楼盘】的楼盘业务员姓名1 申请您带看。佣金：5000元/套，合作有效期2017/05/01 - 2018/05/01</text>
+        <view class="zan-arrow"></view>
+      </view>
+      <view class='noticeItem unread' @tap='tapNoticeItem({{item}})'>
+        操作更新状态类
+        <view>2018-03-08 15:17</view>
+        <text>客户 姓名 - 楼盘名 的订单状态已经更新，等待您下一步操作</text>
+        <view class="zan-arrow"></view>
+      </view>
+
+      <view class='noticeItem unread' @tap='tapNoticeItem({{item}})'>
+        操作更新状态类
+        <view>2018-03-08 15:17</view>
+        <text>客户 姓名 - 楼盘 经纪人名 已经 申请报备（上一步状态），已经自动确认（等待您【下一步状态】操作）</text>
+        <view class="zan-arrow"></view>
+      </view> -->
+    </repeat>
+  </view>
+</template>
+<script>
+import wepy from 'wepy'
+import http from '../utils/http.js'
+export default class NoticeList extends wepy.page {
+  config = {
+    navigationBarTitleText: '通知列表',
+    enablePullDownRefresh: true
+  }
+
+  computed = {
+    userInfo() {
+      return this.$parent.globalData.userInfo
+    },
+    // showArrow(item) {
+    //   console.log('item', item)
+    //   if (this.noArrowMsg.includes(item.msg)) { return false; }
+    //   //item.companyId &&  || item.orderId
+    //   return true
+    // }
+  }
+
+  data = {
+    noticeItem: [],
+    noArrowMsg: ['您的入驻申请 一审通过', '您的入驻申请 二审通过' ]
+  }
+
+  methods = {
+
+    tapNoticeItem(item, index) {
+      console.log(item)
+      http.post('/user/noticeRead', { noticeId: item.id })
+      this.noticeItem[index].readed = 1
+      if (item.companyId) { //公司入驻审核通知,入驻审核的排外处理
+
+        if (!item.showArrow) { return; }
+        this.$navigate('./verifyList', { companyId: item.companyId });
+      } else if (item.orderId) { //订单通知
+        this.$navigate('./my_customerDetail', { orderId: item.orderId });
+      }
+
+
+    },
+
+  }
+
+  onShow() {
+
+  }
+  onLoad() {
+    http.get('/user/noticeList').success(res => {
+      const _this = this
+      this.noticeItem = res.data.map(v => {
+        v.timestamp = v.timestamp//.replace(/\..*$/, '').replace('T', ' ')
+        v.showArrow = !_this.noArrowMsg.includes(v.msg)
+        return v
+      })
+      this.$apply()
+    })
+  }
+
+
+  onPullDownRefresh() {
+    console.log('onPullDownRefresh')
+    wx.stopPullDownRefresh()
+  }
+}
+
+</script>
+<style lang="less">
+.none {
+  display: none;
+}
+
+.container {
+  font-size: 26rpx;
+}
+
+.noticeItem {
+  position: relative;
+  padding: 15px 30px 15px 15px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  border-bottom: 1px solid #ddd;
+  background: #f9f9f9;
+  color: #aaa;
+  .zan-arrow {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    margin-top: 0px;
+    color: #999;
+  }
+}
+
+.unread {
+  background: #fff;
+  border-bottom: none;
+  color: #333;
+}
+
+</style>

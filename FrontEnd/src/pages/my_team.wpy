@@ -1,0 +1,692 @@
+<template>
+  <view>
+    <repeat for="{{myTeams}}" item="myTeam">
+      <!-- {{index}} 这里可以按经理分组 -->
+      <view class="groupName">
+        <view>组：{{myTeam.groupName}}
+          <text style='font-weight: normal;color:#888'>{{myTeam.groupUserName}}</text>
+        </view>
+        <view class='groupNameRight'>
+          <!-- <view class="zan-c-blue" @tap.stop="deleteGroupFn({{myTeam}})" wx:if="{{userInfo.permission.addStaff}}">删除</view> -->
+          <!-- && userInfo.id !=myTeam.groupUserId -->
+          <view class="zan-c-blue" @tap.stop="editGroupFn({{myTeam}})" wx:if="{{userInfo.permission.addStaff}}">编辑</view>
+        </view>
+      </view>
+      <repeat for="{{myTeam.groupUsers}}" item="item">
+        <view class="zan-panel" @tap.stop="gotoDetail">
+          <view class="zan-card">
+            <view class="zan-card__thumb">
+              <image class="zan-card__img" src="{{item.avatarUrl}}" mode="aspectFit"></image>
+            </view>
+            <view class="zan-card__detail">
+              <view class="zan-card__detail-row">
+                <view class="zan-card__right-col zan-c-black zan-font-bold">{{item.roleTypeName}}</view>
+                <view class="zan-card__left-col zan-ellipsis--l2">
+                  {{item.name || item.nickName}}
+                </view>
+              </view>
+              <view class="zan-card__detail-row zan-c-gray-darker">
+                <view class="zan-card__right-col zan-c-blue" @tap.stop="editFlagFn({{item}})" wx:if="{{userInfo.permission.addStaff && userInfo.id !=item.id}}">编辑</view>
+                <view class="zan-card__left-col zan-c-red">
+                  {{item.phoneNum}}
+                </view>
+              </view>
+              <view class="zan-card__detail-row zan-c-gray-darker">
+                <view class="zan-card__right-col zan-c-blue" @tap.stop="deleteFlagFn({{item}})" wx:if="{{userInfo.permission.addStaff && userInfo.id !=item.id}}">删除</view>
+                <!-- <view class="zan-card__left-col" wx:if="{{item}}">带看2个，成交1个</view> -->
+              </view>
+            </view>
+          </view>
+        </view>
+      </repeat>
+    </repeat>
+    <view class="zan-dialog {{ showGroupPopup ? 'zan-dialog--show' : '' }}">
+      <view class="zan-dialog--mask"></view>
+      <view class="zan-dialog--container">
+        <view class="zan-dialog__header">
+          {{dialogGroupTitle}}
+        </view>
+        <view class="zan-dialog__content zan-dialog__content--title">
+          <view class="zan-cell zan-field wrapped">
+            <view class="zan-cell__hd zan-field__title">组名称</view>
+            <input type="text" value="{{selectedGroup.groupName}}" placeholder="请输入组名称" class="zan-field__input zan-cell__bd" placeholder-class="zan-field__placeholder" bindinput="inputGroup('groupName')" />
+          </view>
+          <!-- <view class="zan-cell zan-field wrapped"> -->
+          <picker bindchange="groupUserChanged" value="{{groupUserChangedIndex}}" range-key="nickName" range="{{companyUsers}}">
+            <view class="zan-cell zan-field wrapped">
+              <view class="zan-cell__hd zan-field__title">选择组负责人</view>
+              <view class="zan-field__input zan-cell__bd list_item_arrow">
+                {{companyUsers[groupUserChangedIndex].nickName}}
+                <view class="icon-arrow-right"></view>
+              </view>
+            </view>
+          </picker>
+          <!-- </view> -->
+        </view>
+        <view class="zan-dialog__footer zan-dialog__footer--horizon">
+          <block>
+            <button class="zan-dialog__button zan-btn" @tap="cancelEdit">取消</button>
+          </block>
+          <block>
+            <button class="zan-dialog__button zan-btn zan-c-blue" @tap="submitGroup">确定</button>
+          </block>
+        </view>
+      </view>
+    </view>
+    <view class="zan-dialog {{ showPopup ? 'zan-dialog--show' : '' }}">
+      <view class="zan-dialog--mask"></view>
+      <view class="zan-dialog--container">
+        <view class="zan-dialog__header">
+          {{dialogTitle}}
+        </view>
+        <view class="zan-dialog__content zan-dialog__content--title">
+          <view class="zan-cell zan-field wrapped">
+            <view class="zan-cell__hd zan-field__title">员工姓名</view>
+            <input type="text" value="{{selectedUser.nickName}}" placeholder="请输入员工姓名" class="zan-field__input zan-cell__bd" placeholder-class="zan-field__placeholder" bindinput="inputUser('nickName')" />
+          </view>
+          <view class="zan-cell zan-field wrapped">
+            <view class="zan-cell__hd zan-field__title">手机号码</view>
+            <input type="tel" value="{{selectedUser.phoneNum}}" placeholder="请输入手机号码" class="zan-field__input zan-cell__bd" placeholder-class="zan-field__placeholder" bindinput="inputUser('phoneNum')" />
+          </view>
+          <!-- <view class="zan-cell zan-field wrapped">
+            <view class="zan-cell__hd zan-field__title">分配组</view>
+            <input type="tel" value="{{selectedUser.roleTypeName}}" placeholder="未分配" class="zan-field__input zan-cell__bd" placeholder-class="zan-field__placeholder" @tap="toggleBottomPopup" />
+          </view> -->
+          <picker bindchange="companyGroupsChanged" value="{{companyGroupsIndex}}" range-key="groupName" range="{{companyGroups}}">
+            <view class="zan-cell zan-field wrapped">
+              <view class="zan-cell__hd zan-field__title">分配组</view>
+              <view class="zan-field__input zan-cell__bd list_item_arrow">
+                {{companyGroups[companyGroupsIndex].groupName}}
+                <view class="icon-arrow-right"></view>
+              </view>
+            </view>
+          </picker>
+        </view>
+        <view class="zan-dialog__footer zan-dialog__footer--horizon">
+          <block>
+            <button class="zan-dialog__button zan-btn" @tap="cancelEdit">取消</button>
+          </block>
+          <block>
+            <button class="zan-dialog__button zan-btn zan-c-blue" @tap="submitStaff">确定</button>
+          </block>
+        </view>
+      </view>
+    </view>
+    <view class="popup-example--bottom zan-popup zan-popup--bottom {{ showBottomPopup ? 'zan-popup--show' : ''}}">
+      <!-- <view class="zan-popup__mask" catchtap="toggleBottomPopup"></view> -->
+      <view class="zan-popup__container" style="width:100%;">
+        <repeat for="{{ourRoles}}">
+          <view class="zan-btns" catchtap="tapRole({{item}})">
+            <button class="zan-btn">
+              {{item.name}}
+            </button>
+          </view>
+        </repeat>
+      </view>
+    </view>
+    <!-- <view class="home-button" wx:if="{{userInfo.permission.addStaff}}">
+      <view @tap="addMyTeam">
+        <view>新增</view>
+        <view>队员</view>
+      </view>
+      <view @tap="addMyGroup">
+        <view>新增</view>
+        <view>小组</view>
+      </view>
+    </view> -->
+    <view class='teamBtns' wx:if="{{userInfo.permission.addStaff}}">
+      <button class="zan-btn zan-btn--primary" @tap="addMyTeam">新增员工</button>
+      <button class="zan-btn" style="background: #369;" @tap="addMyGroup">新增小组</button>
+    </view>
+  </view>
+</template>
+<script>
+import wepy from 'wepy'
+// import config from '../utils/config'
+import http from '../utils/http.js'
+import C from '../constant/index.js'
+export default class MyTeam extends wepy.page {
+  config = {
+    navigationBarTitleText: '我的团队',
+    enablePullDownRefresh: true
+  }
+
+  computed = {
+    choosedCity() {
+      return this.$root.$parent.globalData.choosedCity
+    },
+    userInfo() {
+      return this.$parent.globalData.userInfo
+    },
+    // roleType2name(v) {
+    //   console.log(v)
+    //   return C.userRole[v]
+    // }
+  }
+  data = {
+    C,
+    ourRoles: [],
+    myTeams: [],
+    showGetCouponBtn: 0,
+    editFlag: false,
+    showBottomPopup: false,
+
+    couponBagsList: [1, 2],
+
+    showPopup: false,
+    showGroupPopup: false,
+
+    selectedUser: {},
+    selectedGroup: {},
+    dialogTitle: '',
+    dialogGroupTitle: '',
+    companyUsers: [],
+    groupUserChangedIndex: 0,
+    companyGroupsIndex: 0,
+    companyGroups: [],
+  }
+
+  methods = {
+    companyGroupsChanged(e) {
+      this.companyGroupsIndex = e.detail.value
+      this.selectedUser['companyGroupId'] = this.companyGroups[this.companyGroupsIndex].id
+      this.$apply()
+    },
+    groupUserChanged(e) {
+      this.groupUserChangedIndex = e.detail.value
+      this.selectedGroup['groupUserName'] = this.companyUsers[this.groupUserChangedIndex].nickName
+      this.selectedGroup['groupUserId'] = this.companyUsers[this.groupUserChangedIndex].id
+      this.$apply()
+    },
+    inputUser(key, e) {
+      this.selectedUser[key] = e.detail.value
+    },
+    inputGroup(key, e) {
+      this.selectedGroup[key] = e.detail.value
+    },
+    // tapRole(item) {
+    //   this.selectedUser['roleId'] = item.id
+    //   this.selectedUser['roleTypeName'] = item.name
+    //   this.showBottomPopup = false
+    //   this.$apply()
+    // },
+
+    addMyTeam() {
+      //显示新增员工对话框
+      this.dialogTitle = '新增员工'
+      this.showPopup = 1
+      this.selectedUser = {}
+      this.selectedUser['companyGroupId']=0
+      this.$apply()
+      // this.companyGroups[0] && (this.selectedUser['companyGroupId'] = this.companyGroups[0].id)
+    },
+    editFlagFn(user) {
+      this.dialogTitle = '编辑员工'
+      this.showPopup = 2
+      this.selectedUser = user
+      this.companyGroups.forEach((v,k)=>{
+        if(v.id=user.companyGroupId){
+          this.companyGroupsIndex=k
+          return;
+        }
+      })
+      this.$apply()
+    },
+    addMyGroup() {
+      this.dialogGroupTitle = '新增组'
+      this.showGroupPopup = 1
+      this.selectedGroup = {}
+      this.selectedGroup['groupUserId'] = this.companyUsers[0].id
+    },
+    editGroupFn(group) {
+      this.dialogGroupTitle = '编辑组'
+      this.showGroupPopup = 1
+      this.selectedGroup = group
+      this.companyUsers.forEach((v,k)=>{
+        if(v.id=group.userId){
+          this.groupUserChangedIndex=k
+          return;
+        }
+      })
+      this.$apply()
+    },
+
+    toggleBottomPopup() {
+      this.showBottomPopup = true;
+    },
+    cancelEdit() {
+      this.showPopup = 0;
+      this.showBottomPopup = false;
+      this.showManagerPopup = false;
+      this.showGroupPopup = false;
+    },
+
+    deleteGroupFn(group) {
+      // console.error(group)
+      const _this = this
+      wx.showModal({
+        title: '提示',
+        content: `确认删除组 "${group.groupName}"?`,
+        success: function(res) {
+          if (res.confirm) {
+            http.delete('/user/userGroup', { groupId: group.groupId })
+              .success(s => {
+                wx.showToast({
+                  title: `组 "${group.groupName}" 已成功删除`,
+                  icon: 'success',
+                  duration: 3000,
+                  complete() {
+                    _this.initData()
+                  }
+                })
+              })
+            // 
+          } else if (res.cancel) {
+            console.log('用户点击取消')
+          }
+        }
+        //_this.showGroupPopup = false;
+      })
+
+    },
+    
+
+    
+    deleteFlagFn(user) {
+      const _this = this
+      wx.showModal({
+        title: '提示',
+        content: `确认删除员工 ${user.nickName}?`,
+        success: function(res) {
+          if (res.confirm) {
+            http.delete('/user', { userId: user.id })
+              .success(s => {
+                wx.showToast({
+                  title: `员工 ${user.nickName} 已成功删除`,
+                  icon: 'success',
+                  duration: 3000,
+                  complete() {
+                    _this.initData()
+                  }
+                })
+              })
+            // 
+          } else if (res.cancel) {
+            console.log('用户点击取消')
+          }
+        }
+      })
+    },
+    gotoDetail(item) {
+      // if (!(item.status === 4 || item.status === 5 || item.status === 6)) {
+      //this.$navigate('./my_customer');
+      // }
+    },
+    submitGroup() {
+      const { groupId, groupName, groupUserId, groupUserName } = this.selectedGroup
+      const data = { groupId, groupName, groupUserId, groupUserName }
+      http.post('/user/companyGroup', data).success(res => {
+        this.showGroupPopup = false
+        this.initData()
+      })
+
+      this.showGroupPopup = false;
+    },
+    submitStaff() {
+      //几个字段都必填
+      const { phoneNum, roleId, nickName, companyGroupId, id } = this.selectedUser
+      if (!phoneNum) { //都必填
+        wx.showToast({
+          title: '手机号必填',
+          icon: 'success',
+          duration: 3000,
+        })
+        return;
+      }
+
+      const data = { phoneNum, roleId, name: nickName, companyGroupId, userId:id}
+
+      let _this = this
+
+      if (!id) {
+        //新增 员工
+        http.post('/user', data).success(r => {
+          wx.showModal({
+            title: '提示',
+            content: r.data.msg,
+            showCancel: false,
+            success: function(res) {
+              _this.showPopup = false
+              _this.initData()
+            }
+          })
+        })
+        return;
+      }
+      //编辑 员工
+      const data2={name, companyGroupId, userId:id}
+      //name, companyGroupId,companyId ,userId
+      if (id) {
+        http.put('/user', data).success(r => {
+          _this.showPopup = false
+          _this.initData()
+        })
+        return;
+      }
+
+    }
+
+
+  }
+  onLoad() {
+    this.initData()
+  }
+
+  initData() {
+    /*
+      [{
+        groupName:'',
+        groupId:'',
+        groupUserId:'',
+        groupUsers:[{
+            "id": 1, "nickName": "童年", "name": "正全平台超级管理员", "phoneNum": "17601206800", "parentRoleId": 1,带看，认购，签约，结佣
+        }],
+        }]
+    */
+    http.get('/user/list').success(res => {
+      this.myTeams = res.data
+      this.$apply()
+    })
+    //查询组，员工分配组用
+    http.get('/user/companyGroups').success(res => {
+      this.companyGroups = res.data
+      this.companyGroups.unshift({id:0,groupName:'暂不设置组'})//初始化一个可以为空的组
+      this.selectedUser['companyGroupId'] = this.companyGroups[0].id
+    })
+    //暂时废弃
+    // http.get('/user/ourRoles').success(res => {
+    //   this.ourRoles = res.data
+    // })
+    //初始化公司用户，设置组负责人用
+    http.get('/user/companyUsers').success(res => {
+      this.companyUsers = res.data
+      this.companyUsers.unshift({id:0,nickName:"暂不设置负责人",companyGroupId:0})
+      this.selectedGroup['groupUserId'] = this.companyUsers[0].id
+      this.$apply()
+    })
+
+  }
+
+
+  onPullDownRefresh() {
+    console.log('onPullDownRefresh')
+    wx.stopPullDownRefresh()
+  }
+
+}
+
+</script>
+<style lang="less">
+.groupNameRight view {
+  display: inline;
+  margin-left: 20px;
+  white-space: nowrap;
+}
+
+.groupName {
+  font-size: 14px;
+  margin: 15px 15px 0;
+  display: flex;
+  justify-content: space-between;
+  font-weight: bold;
+}
+
+.teamBtns {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  button {
+    flex: 1 1 50%;
+    margin: 0 0 0;
+    border: none!important;
+    border-color: transparent;
+    border-radius: none;
+    color: #fff;
+  }
+}
+
+.home-button {
+  width: 80rpx;
+  height: 80rpx;
+  position: fixed;
+  bottom: 100rpx;
+  right: 40rpx;
+  background-color: #f68954;
+  text-align: center;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 27rpx;
+  line-height: 40rpx;
+  padding: 10rpx;
+}
+
+.couponBagsList {
+  padding: 20rpx;
+  .couponBag {
+    background-color: #fff;
+    margin-bottom: 20rpx;
+    padding: 60rpx 30rpx 30rpx;
+    border-radius: 10rpx;
+    color: #333;
+    .left {
+      width: 90rpx;
+      height: 90rpx;
+      background: url("https://assets.mgzf.com/appimg/e64245f05e092265b5902dceb9edb9a9.png") no-repeat;
+      background-size: cover;
+      flex: none;
+    }
+    .right {
+      margin-left: 30rpx;
+      flex: 1;
+      .title {
+        font-size: 28rpx;
+      }
+      .desc {
+        font-size: 48rpx;
+        line-height: 1;
+        margin-top: 10rpx;
+      }
+    }
+    .checkBtn {
+      width: 100%;
+      height: 80rpx;
+      line-height: 80rpx;
+      font-size: 30rpx;
+      margin-top: 50rpx;
+      border-color: #ee4255;
+      color: #ee4255;
+    }
+    &.disabled {
+      background-color: #b8bbc2;
+      color: #fff;
+      .left {
+        background-image: url("https://assets.mgzf.com/appimg/a29451e36fa6c7b29e9fcb7946526304.png");
+      }
+      .disableImg {
+        width: 130rpx;
+        height: 130rpx;
+      }
+      .hasOverDate {
+        background: url("https://assets.mgzf.com/appimg/3fd82eefe8f211b8d8a61169d51b5ca9.png") no-repeat;
+        background-size: cover;
+      }
+      .hasDisabled {
+        background: url("https://assets.mgzf.com/appimg/0c2bd5d2f65cddaf74be5db603829e72.png") no-repeat;
+        background-size: cover;
+      }
+      .hasUsed {
+        background: url("https://assets.mgzf.com/appimg/af63946e2a37e0be8a82417da9f18356.png") no-repeat;
+        background-size: cover;
+      }
+      .checkBtn {
+        border-color: #dcdcdc;
+        color: #fff;
+      }
+    }
+  }
+}
+
+.couponBagsNone {
+  width: 320rpx;
+  position: fixed;
+  left: 50%;
+  top: 45%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  .noneImage {
+    display: inline-block;
+    width: 160rpx;
+    height: 150rpx;
+    background: url("https://assets.mgzf.com/appimg/99fd4efed536deca3ddaf4cc710f3770.png") no-repeat;
+    background-size: cover;
+  }
+  .noneText {
+    font-size: 30rpx;
+    color: #666666;
+    margin: 40rpx 0;
+  }
+  .noneBtn {
+    height: 68rpx;
+    line-height: 68rpx;
+    width: 100%;
+    font-size: 28rpx;
+    background-color: #F3511D;
+  }
+}
+
+.zan-popup__container {
+  text-align: center;
+}
+
+.zan-btns {
+  margin: 0;
+}
+
+.zan-dialog--container {
+  position: fixed;
+  top: 45%;
+  left: 50%;
+  width: 80%;
+  height: 0;
+  font-size: 16px;
+  overflow: hidden;
+  transition: all .2s linear;
+  border-radius: 4px;
+  background-color: #fff;
+  transform: translate3d(-50%, -50%, 0);
+  color: #333;
+  opacity: 0;
+  z-index: 1
+}
+
+.zan-dialog--mask {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, .6);
+  transition: .3s;
+  display: none;
+  z-index: 1
+}
+
+.zan-dialog__header {
+  padding: 15px 0 0;
+  text-align: center
+}
+
+.zan-dialog__content {
+  position: relative;
+  padding: 15px 20px;
+  line-height: 1.5;
+  min-height: 40px
+}
+
+.zan-dialog__content::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 200%;
+  transform: scale(.5);
+  transform-origin: 0 0;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 0 solid #e5e5e5;
+  border-bottom-width: 1px
+}
+
+.zan-dialog__content--title {
+  color: #999;
+  font-size: 14px
+}
+
+.zan-dialog__footer {
+  overflow: hidden
+}
+
+.zan-dialog__button {
+  line-height: 50px;
+  height: 50px;
+  padding: 0 5px;
+  border-radius: 0;
+  margin-bottom: 0
+}
+
+.zan-dialog__button::after {
+  border-width: 0;
+  border-radius: 0
+}
+
+.zan-dialog--show .zan-dialog--container {
+  opacity: 1;
+  height: auto
+}
+
+.zan-dialog--show .zan-dialog--mask {
+  display: block
+}
+
+.zan-dialog__footer--horizon {
+  display: flex
+}
+
+.zan-dialog__footer--horizon .zan-dialog__button {
+  flex: 1
+}
+
+.zan-dialog__footer--horizon .zan-dialog__button::after {
+  border-right-width: 1px
+}
+
+.zan-dialog__footer--horizon .zan-dialog__button:last-child::after {
+  border-right-width: 0
+}
+
+.zan-dialog__footer--vertical .zan-dialog__button {
+  flex: 1
+}
+
+.zan-dialog__footer--vertical .zan-dialog__button::after {
+  border-bottom-width: 1px
+}
+
+.zan-dialog__footer--vertical .zan-dialog__button:last-child::after {
+  border-bottom-width: 0
+}
+
+</style>

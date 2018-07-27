@@ -1,0 +1,153 @@
+<template>
+  <view class="lds-spinner" style="{{setSize}}">
+    <view class="bar"></view>
+    <view class="bar"></view>
+    <view class="bar"></view>
+    <view class="bar"></view>
+    <view class="bar"></view>
+    <view class="bar"></view>
+    <view class="bar"></view>
+    <view class="bar"></view>
+    <view class="bar"></view>
+    <view class="bar"></view>
+    <view class="bar"></view>
+    <view class="bar"></view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+export default class Spinner extends wepy.component {
+  props = {
+    width: {
+      type: String,
+      default: '38rpx'
+    },
+    height: {
+      type: String,
+      default: '38rpx'
+    }
+  }
+  computed = {
+    setSize() {
+      return `width:${this.width};height:${this.height}`
+    }
+  }
+  onLoad () {}
+}
+</script>
+
+<style lang="less">
+@keyframes lds-spinner {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@-webkit-keyframes lds-spinner {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.lds-spinner {
+  position: relative;
+  display: inline-block;
+  vertical-align: text-bottom;
+}
+.lds-spinner .bar {
+  left: 93rpx;
+  top: 34rpx;
+  position: absolute;
+  -webkit-animation: lds-spinner linear 0.8s infinite;
+  animation: lds-spinner linear 0.8s infinite;
+  background: #999999;
+  width: 14rpx;
+  height: 32rpx;
+  border-radius: 64%;
+  -webkit-transform-origin: 7rpx 66rpx;
+  transform-origin: 7rpx 66rpx;
+}
+.lds-spinner .bar:nth-child(1) {
+  -webkit-transform: rotate(0deg);
+  transform: rotate(0deg);
+  -webkit-animation-delay: -0.733333333333333s;
+  animation-delay: -0.733333333333333s;
+}
+.lds-spinner .bar:nth-child(2) {
+  -webkit-transform: rotate(30deg);
+  transform: rotate(30deg);
+  -webkit-animation-delay: -0.666666666666667s;
+  animation-delay: -0.666666666666667s;
+}
+.lds-spinner .bar:nth-child(3) {
+  -webkit-transform: rotate(60deg);
+  transform: rotate(60deg);
+  -webkit-animation-delay: -0.6s;
+  animation-delay: -0.6s;
+}
+.lds-spinner .bar:nth-child(4) {
+  -webkit-transform: rotate(90deg);
+  transform: rotate(90deg);
+  -webkit-animation-delay: -0.533333333333333s;
+  animation-delay: -0.533333333333333s;
+}
+.lds-spinner .bar:nth-child(5) {
+  -webkit-transform: rotate(120deg);
+  transform: rotate(120deg);
+  -webkit-animation-delay: -0.466666666666667s;
+  animation-delay: -0.466666666666667s;
+}
+.lds-spinner .bar:nth-child(6) {
+  -webkit-transform: rotate(150deg);
+  transform: rotate(150deg);
+  -webkit-animation-delay: -0.4s;
+  animation-delay: -0.4s;
+}
+.lds-spinner .bar:nth-child(7) {
+  -webkit-transform: rotate(180deg);
+  transform: rotate(180deg);
+  -webkit-animation-delay: -0.333333333333333s;
+  animation-delay: -0.333333333333333s;
+}
+.lds-spinner .bar:nth-child(8) {
+  -webkit-transform: rotate(210deg);
+  transform: rotate(210deg);
+  -webkit-animation-delay: -0.266666666666667s;
+  animation-delay: -0.266666666666667s;
+}
+.lds-spinner .bar:nth-child(9) {
+  -webkit-transform: rotate(240deg);
+  transform: rotate(240deg);
+  -webkit-animation-delay: -0.2s;
+  animation-delay: -0.2s;
+}
+.lds-spinner .bar:nth-child(10) {
+  -webkit-transform: rotate(270deg);
+  transform: rotate(270deg);
+  -webkit-animation-delay: -0.133333333333333s;
+  animation-delay: -0.133333333333333s;
+}
+.lds-spinner .bar:nth-child(11) {
+  -webkit-transform: rotate(300deg);
+  transform: rotate(300deg);
+  -webkit-animation-delay: -0.066666666666667s;
+  animation-delay: -0.066666666666667s;
+}
+.lds-spinner .bar:nth-child(12) {
+  -webkit-transform: rotate(330deg);
+  transform: rotate(330deg);
+  -webkit-animation-delay: 0s;
+  animation-delay: 0s;
+}
+.lds-spinner {
+  width: 38rpx !important;
+  height: 38rpx !important;
+  -webkit-transform: translate(-19rpx, -19rpx) scale(0.19) translate(19rpx, 19rpx);
+  transform: translate(-19rpx, -19rpx) scale(0.19) translate(19rpx, 19rpx);
+}
+</style>

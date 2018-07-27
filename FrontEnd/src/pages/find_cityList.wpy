@@ -1,0 +1,103 @@
+<template>
+  <view class="container">
+    <!-- <view class="located">
+      <view class="mg-color-light">GPS定位城市</view>
+      <button class="locateBtn" size="mini" loading="{{locating}}" @tap="chooseCity({{locateCity}}, {{locateCityId}})">{{locateCity}}</button>
+    </view> -->
+    <!-- <repeat for="{{cityGroupList}}" key="index"> -->
+        <view class="cellTitle">选择城市</view>
+        <view class="cellView">
+          <repeat for="{{cityGroupList}}" key="index">
+            <view class="cellItem border-color"
+                  @tap='chooseCity({{item}})'>{{item.shortName}}</view>
+          </repeat>
+        </view>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import http from '../utils/http.js'
+
+  export default class FindCityList extends wepy.page {
+    config = {
+      navigationBarTitleText: '城市列表'
+    }
+
+    components = {
+    }
+
+    data = {
+      locating: false,
+      locateCity: '定位城市',
+      locateCityId: null,
+      cityGroupList: []
+    }
+
+    methods = {
+      chooseCity (city) {
+        this.$parent.globalData.currentCity=city
+        wx.setStorageSync('currentCity',city)
+        wx.reLaunch({
+          url: './find_home'
+        })
+       }
+    }
+
+  
+    getCityList() {
+      
+    }
+    getLocateCity() {
+     
+    }
+
+    onLoad(params){
+      http.get('/user/city',{level:1})
+      .success(res=>{
+        //console.log('/user/cityList=>',res)
+        this.cityGroupList=res.data
+        this.$apply()
+      })
+    }
+    onPullDownRefresh(){
+    console.log('onPullDownRefresh')
+    wx.stopPullDownRefresh()
+  }
+  }
+</script>
+
+<style lang="less">
+  .located {
+    margin: 30rpx;
+    view {
+      margin: 20rpx 0;
+    }
+    .locateBtn {
+      width: 200rpx;
+      height: 70rpx;
+      line-height: 70rpx;
+      padding: 0;
+      background-color: #fff;
+      color: #333;
+    }
+  }
+  .cellTitle {
+    padding-left: 30rpx;
+    line-height: 66rpx;
+    color: #999;
+  }
+  .cellView {
+    background-color: #ffffff;
+    padding-left: 30rpx;
+    color: #333;
+    .cellItem {
+      line-height: 90rpx;
+      border-bottom: 1rpx solid;
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+  }
+
+</style>

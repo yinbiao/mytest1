@@ -1,0 +1,561 @@
+<template>
+  <view class="container">
+    <!--房源图片-->
+    <view class="swiper">
+      <swiper duration="{{200}}" indicator-dots="true" autoplay="true" @change="swiperChange">
+        <repeat for="{{banners}}">
+          <swiper-item @tap="imagePreview({{index}})">
+            <image src="{{item}}" class="slide-image" lazy-load="true" mode="aspectFill" />
+          </swiper-item>
+        </repeat>
+      </swiper>
+      <!-- <text class="activeSwiper" wx:if="{{banners.total}}">{{banners.active}}/{{banners.total}}</text> -->
+    </view>
+    <!--房源标题block-->
+    <!-- <RoomInfo :roomInfo.sync="roomInfo"></RoomInfo> -->
+    <view class="room-info">
+      <view class="titleLine">
+        <view class="room-name mg-color-dark mg-bold">
+          <view class="zan-icon zan-icon-wap-home zan-c-green"></view>
+          <!-- （{{building.districtName}}） -->{{building.buildingName}}</view>
+        <view class="tags" style='white-space: nowrap;'>
+          <text class="tag-label label-type2">{{building.propertyTypeName}}</text>
+          <text class="tag-label label-type3">{{building.saleTypeName}}</text>
+          <!-- <text class="tag-label label-type4">在售22</text> -->
+        </view>
+      </view>
+      <!-- <view class="mg-font-small mg-color-light">客户 0 | 带看 0 | 成交 0</view> -->
+      <view class="sub-title">
+        <view class="pay-method">
+          均价：
+          <view class="price">
+            {{building.averagePrice}} 元/㎡
+          </view>
+        </view>
+      </view>
+      <view class="sub-title">
+        <view class="pay-method">
+          总价范围：
+          <view class="price">
+            {{building.minTotalPrice}}万 ~ {{building.maxTotalPrice}}万
+          </view>
+        </view>
+      </view>
+      <view>
+        <view class="sub-title pay-method room-address" @tap="gotoLocation({{building.geolocation}})">
+          <view>楼盘地址：</view>
+          <view class="zan-c-blue">
+            <!-- 宝山区-江杨北路1568号 -->
+            {{building.address}}
+          </view>
+          <view class="icon-arrow-right"></view>
+        </view>
+        <!-- <view class="sub-title pay-method room-address">
+          <view>开盘时间：</view>
+          <view class="zan-c-blue">
+            2018年11月11日
+          </view>
+          <view class="icon-arrow-right"></view>
+        </view> -->
+        <view class="sub-title pay-method room-address">
+          <view>交房时间：</view>
+          <view class="zan-c-black">
+            {{building.finishTime}}
+          </view>
+        </view>
+        <!-- -佣金计划未登录不能查看 -->
+        <view class="sub-title pay-method room-address">
+          <view>佣金计划：</view>
+          <view class="zan-c-red">
+            {{building.commision}}
+          </view>
+        </view>
+        <!-- <view class="sub-title pay-method room-address">
+          <view>合作时间：</view>
+          <view class="zan-c-red">
+            2018年11月11日
+          </view>
+          到
+          <view class="zan-c-red">
+            20120年11月11日
+          </view>
+        </view> -->
+      </view>
+    </view>
+    <!-- 楼盘动态 -->
+    <view class="swiper">
+      <swiper duration="{{200}}" indicator-dots="true" autoplay="true" @change="swiperChange" wx:if="{{building.newsImgs}}">
+        <repeat for="{{building.newsImgs}}">
+          <swiper-item @tap="imagePreview({{index}})">
+            <image src="{{item}}" class="slide-image" lazy-load="true" mode="aspectFill" />
+          </swiper-item>
+        </repeat>
+      </swiper>
+      <view class="sub-title" wx:if="{{building.newsText}}">
+        {{building.newsText}}
+      </view>
+      <!-- <text></text> -->
+      <!-- <text class="activeSwiper" wx:if="{{banners.total}}">{{banners.active}}/{{banners.total}}</text> -->
+    </view>
+    <!--主力户型-->
+    <view class="room-building">
+      <view class="sectionTitle">
+        <view class="zan-icon zan-icon-sign"></view>主力户型</view>
+      <view title='houseType'>{{houseType}}</view>
+      <view class="flats-list">
+        <repeat for="{{mainImages}}">
+          <image src="{{item}}" @tap="previewImage({{mainImages}},{{item}})"></image>
+        </repeat>
+      </view>
+    </view>
+    <!--楼盘介绍-->
+    <view class="room-building">
+      <view class="sectionTitle">
+        <view class="zan-icon zan-icon-tosend"></view>楼盘介绍</view>
+      <view class="flats-list">
+        {{building.introduce}}
+        <!-- <repeat for="{{building.introduce}}">
+          <image src="{{layoutImages[index]}}"></image>
+        </repeat> -->
+      </view>
+    </view>
+    <!--楼盘资料-->
+    <view class="room-building">
+      <view class="sectionTitle">
+        <view class="zan-icon zan-icon-tosend"></view>楼盘资料</view>
+      <view class="flats-list">
+        <repeat for="{{infoImages}}">
+          <image src="{{item}}"  @tap="previewImage({{infoImages}},{{item}})"></image>
+        </repeat>
+      </view>
+    </view>
+    <!--楼盘讲堂-->
+    <view class="mg-content-block room-desc">
+      <view class="sectionTitle">
+        <view class="zan-icon zan-icon-edit-data"></view>楼盘讲堂</view>
+      <repeat for="{{mainVideos}}">
+        <video src='{{item}}'></video>
+      </repeat>
+    </view>
+    <!--合作合同-->
+    <view class="room-building" wx:if="{{userInfo.permission.getCoporation}}">
+      <view class="sectionTitle">
+        <view class="zan-icon zan-icon-pending-orders"></view>合作合同</view>
+      <view class="flats-list">
+        <repeat for="{{coporationImages}}">
+          <image src="{{item}}"  @tap="previewImage({{coporationImages}},{{item}})"></image>
+        </repeat>
+      </view>
+    </view>
+    <!--五证-->
+    <view class="room-building" wx:if="{{userInfo.permission.getCredentials}}">
+      <view class="sectionTitle">
+        <view class="zan-icon zan-icon-pending-payment"></view>五证</view>
+      <view class="flats-list">
+        <repeat for="{{credentialsImages}}">
+          <image src="{{item}}" @tap="previewImage({{credentialsImages}},{{item}})"></image>
+        </repeat>
+      </view>
+    </view>
+    <!--合作备注-->
+    <view class="mg-content-block room-desc">
+      <view class="sectionTitle">
+        <view class="zan-icon zan-icon-edit-data"></view>合作备注</view>
+      <text>{{building.remark}}</text>
+    </view>
+    <!--操作按钮区域-->
+    <view class="room-button" wx:if="{{building.userId != userInfo.id}}">
+      <view class="zan-col zan-col-6" @tap="callPhone({{building.phoneNum}})">
+        <view class="zan-icon zan-icon-phone" style="color: #ff4343;"></view>
+        <view>电话</view>
+      </view>
+      <view class="zan-col zan-col-4" @tap="miniChat({{building.userId}})">
+        <view class="zan-icon zan-icon-chat" style="color: #09bb07;"></view>
+        <view>微聊</view>
+      </view>
+      <view class="zan-col zan-col-6" @tap="follow({{building.id}})" style='border-left: 1px solid #ddd;'>
+        <view class="zan-icon {{isFollow ? 'zan-icon-like' : 'zan-icon-like-o'}}" style="color: #ff0006;"></view>
+        <view>关注</view>
+      </view>
+       <!-- wx:if="{{userInfo.permission.addReport}}" -->
+      <view class="zan-col zan-col-12 h_contract" @tap="rapidPrepar">
+        <view class="zan-icon zan-icon-chat" style="color: #fff;"></view>
+        <view class="zan-c-gray contract">快速报备</view>
+      </view>
+      <view class="zan-col zan-col-12 h_contract" @tap="pushToPage({{building.id}})" wx:if="{{building.userId == userInfo.id}}">
+        <view class="zan-icon zan-icon-chat" style="color: #fff;"></view>
+        <view class="zan-c-gray contract">编辑</view>
+      </view>
+    </view>
+  </view>
+</template>
+<script>
+import wepy from 'wepy'
+import RoomInfo from '../components/find_roomDetail_comp/room_title'
+import http from '../utils/http.js'
+import C from '../constant/index.js'
+export default class FindRoomDetail extends wepy.page {
+  config = {
+    navigationBarTitleText: '楼盘详情'
+  }
+  components = {
+    RoomInfo: RoomInfo
+  }
+  data = {
+    houseType: '',
+    banners: [],
+    infoImages: [],
+    coporationImages: [],
+    credentialsImages: [],
+    mainImages: [],
+    mainVideos: '',
+    building: {
+      id: '',
+      buildingName: '',
+      phoneNum: '',
+      province: '',
+      city: '',
+      district: '',
+      street: '',
+      award: '',
+      averagePrice: '',
+      commision: '',
+      minQuato: '',
+      saleType: '',
+      houseType: '',
+      address: '',
+      geolocation: '',
+      introduce: '',
+      cooperationRule: '',
+      personIdInCharge: '',
+      state: '',
+      online: '',
+      time: '',
+      surround: '',
+      traffic: '',
+      remark: '',
+      policy: '',
+      finishTime: '',
+      valid: '',
+      userId: '',
+      mainImages: '',
+      mainVideos: '',
+      banners: '',
+      infoImages: '',
+      coporationImages: '',
+      credentialsImages: '',
+      totalPrice: '',
+
+      hasAttentioned: '',
+
+      propertyTypeName: '',
+      saleTypeName: ''
+    },
+
+    isFollow: false
+
+  }
+
+  computed = {
+    userInfo() { return this.$parent.globalData.userInfo }
+  }
+
+  methods = {
+    pushToPage(buildingId){
+      this.$navigate('./edit_building',{buildingId})
+    },
+    previewImage(urls,current) {
+      wx.previewImage({
+        current, // 当前显示图片的http链接
+        urls // 需要预览的图片http链接列表
+      })
+    },
+    gotoLocation(geo) {
+      console.log('geo=>', geo)
+      const lngLat = geo.split('-')
+      wx.authorize({
+        scope: 'scope.userLocation',
+        success() {
+          wx.openLocation({
+            latitude: parseFloat(lngLat[1]),
+            longitude: parseFloat(lngLat[0]),
+          })
+        }
+      })
+
+    },
+    miniChat(userId) {
+      this.$navigate('./msg?userId=' + userId)
+    },
+    swiperChange(e) {
+
+    },
+    imagePreview(index) {
+      wx.previewImage({
+        urls: this.banners,
+        current: this.banners[index]
+      })
+    },
+    rapidPrepar() {
+      const b = this.building
+      this.$navigate(`./report?buildingId=${b.id}&userId=${b.userId}`);
+    },
+    callPhone(tel) {
+      wx.makePhoneCall({
+        phoneNumber: tel
+      })
+    },
+    follow(buildingId) {
+      //this.isFollow = !this.isFollow
+      if (!this.isFollow) {
+        http.post('/user/attention', { buildingId })
+          .success(res => {
+            this.isFollow = true
+            this.$apply()
+          })
+      } else {
+        http.delete('/user/attention', { buildingId })
+          .success(res => {
+            this.isFollow = false
+            this.$apply()
+          })
+      }
+
+
+    }
+  }
+
+  onLoad(params) {
+    http.get(`/building?id=${params.buildingId||1}`)
+      .success(res => {
+        const data = res.data[0];
+        const baseUrl = this.$parent.globalData.baseAssetsUrl;
+        data.banners && (this.banners = data.banners.split(',').map(d => {
+          return baseUrl + d
+        }))
+        data.mainImages && (this.mainImages = data.mainImages.split(',').map(d => {
+          return baseUrl + d
+        }))
+        data.infoImages && (this.infoImages = data.infoImages.split(',').map(d => {
+          return baseUrl + d
+        }))
+        data.coporationImages && (this.coporationImages = data.coporationImages.split(',').map(d => {
+          return baseUrl + d
+        }))
+        data.credentialsImages && (this.credentialsImages = data.credentialsImages.split(',').map(d => {
+          return baseUrl + d
+        }))
+        data.mainVideos && (this.mainVideos = data.mainVideos.split(',').map(d => {
+          return baseUrl + d
+        }))
+        //增加房型
+        this.houseType = data.houseType && data.houseType.split(',').map(v => {
+          return C.houseType[v].name
+        }).join(' ')
+        this.isFollow = data.hasAttentioned
+        data.saleTypeName = data.saleType && C.saleType[data.saleType].name
+        data.propertyTypeName = data.propertyType && C.propertyType[data.propertyType].name
+        this.building = data
+        this.$apply()
+      })
+  };
+
+  // http.get(`/user/attention?buildingId=${params.id||1}`)
+  // .success(res=>{
+
+  // })
+
+  onPullDownRefresh() {
+    console.log('onPullDownRefresh')
+    wx.stopPullDownRefresh()
+  }
+}
+
+</script>
+<style lang="less">
+.sectionTitle .zan-icon {
+  margin-right: 16rpx;
+  color: green;
+}
+
+.container {
+  padding-bottom: 112rpx;
+  .swiper {
+    position: relative;
+    swiper {
+      width: 100%;
+      height: 476rpx;
+      .slide-image {
+        width: 750rpx;
+        height: 476rpx;
+      }
+    }
+    .activeSwiper {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: 70rpx;
+      box-sizing: border-box;
+      font-size: 24rpx;
+      line-height: 70rpx;
+      text-align: right;
+      background-color: rgba(0, 0, 0, 0.4);
+      color: #fff;
+      padding-right: 40rpx;
+    }
+  }
+  .roomInfo {
+    background-color: #fff;
+    padding: 40rpx;
+  }
+  .sectionTitle {
+    font-size: 32rpx;
+    color: #333;
+    font-weight: bold;
+    margin-bottom: 30rpx;
+  }
+  .similarHouses {
+    background-color: #fff;
+    /*padding:40rpx 0 40rpx 40rpx;*/
+    margin-top: 20rpx;
+  }
+  .sameCommunityHouses {
+    background-color: #fff;
+    /*padding:40rpx 0 40rpx 40rpx;*/
+    margin-top: 20rpx;
+  }
+}
+
+.room-building {
+  background-color: #fff;
+  padding: 40rpx;
+  margin-top: 20rpx;
+  overflow: hidden;
+  .flats-list {
+    position: relative; // display: flex;
+    justify-content: flex-start;
+    image {
+      width: 200rpx;
+      height: 200rpx;
+      margin-right: 20rpx;
+      border-radius: 10rpx;
+      border: 1rpx solid #f5f5f5;
+      box-sizing: border-box;
+      &:first-child {
+        // margin-left: 0;
+      }
+    }
+  }
+}
+
+.room-desc {
+  padding: 40rpx;
+}
+
+.h_contract {
+  background: #069130;
+  .contract {
+    color: #fff!important;
+  }
+}
+
+.room-button {
+  background: #fff;
+  position: fixed;
+  bottom: 0;
+  z-index: 2;
+  width: 100%;
+  font-size: 30rpx;
+  display: flex;
+  text-align: center;
+  align-items: center;
+  box-shadow: 0px -2px 8px #ccc;
+  view {
+    padding: 4rpx;
+  }
+  .order {
+    flex: 1;
+    background-color: #f68954;
+    color: #fff;
+    height: 92rpx;
+    line-height: 92rpx;
+  }
+  .contact {
+    flex: 1;
+    background-color: rgb(246, 80, 0);
+    color: #fff;
+    height: 92rpx;
+    line-height: 92rpx;
+  }
+  .disabled {
+    filter: grayscale(100%);
+  }
+}
+
+.evaluate {
+  .eva-title {
+    text-align: center;
+    .eva-name {
+      font-size: 28rpx;
+      margin-bottom: 10rpx;
+    }
+    .eva-image {
+      width: 110rpx;
+      height: 110rpx;
+      border-radius: 100%;
+      border: 1rpx solid #f5f5f5;
+    }
+    .star-line {
+      display: flex;
+      justify-content: center;
+      image {
+        width: 60rpx;
+        height: 60rpx;
+        margin: 0 10rpx;
+      }
+    }
+  }
+  .textarea {
+    padding: 40rpx 0;
+    position: relative;
+    .textareaBlock {
+      padding: 24rpx 24rpx;
+      background-color: rgb(245, 245, 245);
+    }
+    .placeholder {
+      font-size: 24rpx;
+      color: #aaa;
+      position: absolute;
+      top: 55rpx;
+      left: 20rpx;
+    }
+    textarea {
+      width: 540rpx;
+      font-size: 24rpx;
+      outline: none;
+      background-color: rgb(245, 245, 245);
+      height: 130rpx;
+    }
+    .count {
+      text-align: right;
+      font-size: 24rpx;
+      color: rgb(204, 204, 204);
+      position: absolute;
+      right: 10rpx;
+      bottom: 47rpx;
+    }
+  }
+  .button {
+    text-align: center;
+    border: 1px solid rgb(246, 80, 0);
+    color: rgb(246, 80, 0);
+    border-radius: 8rpx;
+    width: 566rpx;
+    height: 92rpx;
+    margin: 0 auto;
+    line-height: 90rpx;
+  }
+}
+
+</style>

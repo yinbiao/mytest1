@@ -1,0 +1,163 @@
+<template>
+  <view class="container zan-popup zan-popup--show">
+    <view class="contentUathorize">
+      <view class='content'>
+        <!-- <icon type="info" size="40" color="#4b0" /> -->
+        <view class='loginTips'>
+          <text>授权 沪房通 获取手机号登录</text>
+          <view class='loginLine'></view>
+        </view>
+      </view>
+      <view class="zan-btns" style='margin: 20px;'>
+        <button class="zan-btn zan-btn--primary" open-type="getPhoneNumber" bindgetphonenumber="getPhoneNumber"><view class='icons-wx'></view> 手机号登录</button>
+      </view>
+    </view>
+  </view>
+</template>
+<script>
+import wepy from 'wepy'
+import http from '../utils/http.js'
+export default class Login extends wepy.page {
+
+  data = {
+    showPopup: true
+  }
+
+  methods = {
+
+    getPhoneNumber(e) {
+      const { iv, encryptedData } = e.detail
+      const data = {
+        keys: 'phoneNumber',
+        encryptedData,
+        iv
+      }
+      const _this = this
+      http.post('/user/decryptData', data).success(r => {
+        wx.showToast({
+          title: '登录成功',
+          icon: 'warn',
+          duration: 4000
+        })
+        this.$apply()
+        _this.userCheck() //重新执行wxCode以获取最新用户信息
+      })
+    }
+  }
+
+  userCheck() {
+    const _this = this;
+    wx.checkSession({
+      complete: function() {
+        _this.userLogin();
+      }
+    })
+  }
+
+  // wx.login
+  userLogin() {
+    const _this = this;
+    console.log('====userLogin======')
+    wx.login({
+      success: function(res) {
+        const code = res.code
+        //1.如果code请求失败
+        if (!code) { console.log('登录失败！' + res.errMsg); return; }
+
+        //2.通知后端更新session_key
+        http.post('/user/wxCode', { code }).success(res => {
+          //设置全局请求头
+          http.baseConfig.header.token = res.data.token
+          //3.新用户，要求授权身份信息
+          // if (res.data.newUser) {
+          //   _this.showPopup = res.data.newUser
+          //   _this.$apply()
+          //   return;
+          // }
+          //4.询问是否是该企业员工
+          const staff = res.data.staff
+          if (staff) {
+            wx.showModal({
+              title: '提示',
+              content: res.data.msg,
+              cancelText: '不是',
+              confirmText: '是',
+              success: res => {
+                //res.confirm
+                const data = {
+                  tempId: staff[0].id,
+                  result: res.confirm ? 1 : 0
+                }
+                //更新临时表，用户权限
+                http.post('/user/confirmStaff', data).success(res => {
+                  _this.userCheck() //重新执行wxCode以获取最新用户信息
+                })
+              }
+            })
+            return;
+          }
+
+          //5.老用户，更新客户端用户信息
+          //wx.showTabBar()
+          _this.$parent.globalData.userInfo = res.data
+          wx.showToast({ title: '查询用户信息成功' })
+          wx.navigateBack()
+          
+          //7.返回前一个页面
+
+        })
+      }
+    });
+  }
+  onLoad(e) {
+    //wx.hideTabBar()
+    //this.userCheck()
+  }
+}
+
+</script>
+<style lang="less">
+.content {
+  padding: 30px 20px 10px;
+  text-align: center;
+  icon {
+    margin-bottom: 16px
+  }
+}
+
+.contentUathorize {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: #fff;
+}
+
+.loginLine {
+  border-bottom: 1px solid #ccc;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 10px;
+}
+
+.loginTips {
+  position: relative;
+  color: #ccc;
+}
+.loginTips text{
+  background: #fff;
+  padding: 0 20px;
+  position: relative;
+  z-index: 999
+}
+.icons-wx {
+  position: relative;top: 6px;
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHg9IjBweCIgeT0iMHB4IgogICAgIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIKICAgICB2aWV3Qm94PSIwIDAgNTAgNTAiCiAgICAgc3R5bGU9ImZpbGw6I2ZmZmZmZjsiPjxnIGlkPSJzdXJmYWNlMSI+PHBhdGggc3R5bGU9IiAiIGQ9Ik0gMTkgNiBDIDkuNjI1IDYgMiAxMi41MDM5MDYgMiAyMC41IEMgMiAyNC43Njk1MzEgNC4wNTg1OTQgMjguNjA5Mzc1IDcuODE2NDA2IDMxLjM5MDYyNSBMIDUuMTc5Njg4IDM5LjMwNDY4OCBMIDEzLjQyNTc4MSAzNC4xOTkyMTkgQyAxNS43MTQ4NDQgMzQuOTE3OTY5IDE4LjUwNzgxMyAzNS4xNzE4NzUgMjEuMjAzMTI1IDM0Ljg3NSBDIDIzLjM5MDYyNSAzOS4xMDkzNzUgMjguMzMyMDMxIDQyIDM0IDQyIEMgMzUuNzIyNjU2IDQyIDM3LjMxNjQwNiA0MS42NzU3ODEgMzguNzk2ODc1IDQxLjIzNDM3NSBMIDQ1LjY0NDUzMSA0NS4wNjY0MDYgTCA0My43MzQzNzUgMzguNTE1NjI1IEMgNDYuMzEyNSAzNi4zNzUgNDggMzMuMzk0NTMxIDQ4IDMwIEMgNDggMjMuNzg5MDYzIDQyLjU5NzY1NiAxOC44MzU5MzggMzUuNzUgMTguMTA1NDY5IEMgMzQuNDA2MjUgMTEuMTUyMzQ0IDI3LjM2NzE4OCA2IDE5IDYgWiBNIDEzIDE0IEMgMTQuMTAxNTYzIDE0IDE1IDE0Ljg5ODQzOCAxNSAxNiBDIDE1IDE3LjEwMTU2MyAxNC4xMDE1NjMgMTggMTMgMTggQyAxMS44OTg0MzggMTggMTEgMTcuMTAxNTYzIDExIDE2IEMgMTEgMTQuODk4NDM4IDExLjg5ODQzOCAxNCAxMyAxNCBaIE0gMjUgMTQgQyAyNi4xMDE1NjMgMTQgMjcgMTQuODk4NDM4IDI3IDE2IEMgMjcgMTcuMTAxNTYzIDI2LjEwMTU2MyAxOCAyNSAxOCBDIDIzLjg5ODQzOCAxOCAyMyAxNy4xMDE1NjMgMjMgMTYgQyAyMyAxNC44OTg0MzggMjMuODk4NDM4IDE0IDI1IDE0IFogTSAzNCAyMCBDIDQwLjc0NjA5NCAyMCA0NiAyNC41MzUxNTYgNDYgMzAgQyA0NiAzMi45NTcwMzEgNDQuNDkyMTg4IDM1LjU1MDc4MSA0Mi4wMDM5MDYgMzcuMzk0NTMxIEwgNDEuNDQ1MzEzIDM3LjgxMjUgTCA0Mi4zNTU0NjkgNDAuOTMzNTk0IEwgMzkuMTA1NDY5IDM5LjEwOTM3NSBMIDM4LjY4MzU5NCAzOS4yNSBDIDM3LjI4NTE1NiAzOS43MTg3NSAzNS42ODc1IDQwIDM0IDQwIEMgMjcuMjUzOTA2IDQwIDIyIDM1LjQ2NDg0NCAyMiAzMCBDIDIyIDI0LjUzNTE1NiAyNy4yNTM5MDYgMjAgMzQgMjAgWiBNIDI5LjUgMjYgQyAyOC42OTkyMTkgMjYgMjggMjYuNjk5MjE5IDI4IDI3LjUgQyAyOCAyOC4zMDA3ODEgMjguNjk5MjE5IDI5IDI5LjUgMjkgQyAzMC4zMDA3ODEgMjkgMzEgMjguMzAwNzgxIDMxIDI3LjUgQyAzMSAyNi42OTkyMTkgMzAuMzAwNzgxIDI2IDI5LjUgMjYgWiBNIDM4LjUgMjYgQyAzNy42OTkyMTkgMjYgMzcgMjYuNjk5MjE5IDM3IDI3LjUgQyAzNyAyOC4zMDA3ODEgMzcuNjk5MjE5IDI5IDM4LjUgMjkgQyAzOS4zMDA3ODEgMjkgNDAgMjguMzAwNzgxIDQwIDI3LjUgQyA0MCAyNi42OTkyMTkgMzkuMzAwNzgxIDI2IDM4LjUgMjYgWiAiPjwvcGF0aD48L2c+PC9zdmc+') 50% 50% no-repeat;
+  background-size: 100%;
+}
+</style>

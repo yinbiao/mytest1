@@ -1,0 +1,211 @@
+<template>
+  <view class="container">
+    <scroll-view scroll-y="true">
+      <view class="tips" wx:if="{{!list.length}}">
+        正在载入列表，请稍候...
+      </view>
+      <view class="item-avatar-md" wx:for="{{list}}" wx:key="i.id" wx:for-item="i" wx:for-index="index" data-index="{{index}}" data-name="{{i.name}}" data-id="{{i.id}}" bindtap="goPage">
+              <view class="marks" wx:if="{{i.count}}">
+                <text style='font-size:24rpx;'>{{i.count}}</text>
+              </view>
+              <image src="{{i.avatar}}"></image>
+              <view class="item-text">
+                <view class="text_box">
+                  <view class="flex">
+                    <text class="title">{{i.name}}</text>
+                  </view>
+                  <view class="flex">
+                    <text class="message">{{i.text}}</text>
+                  </view>
+                </view>
+              </view>
+              <view class="item-time padding_half">
+                <text class="messagetime">{{i.updated}}</text>
+              </view> 
+      </view>
+
+    </scroll-view>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+
+  export default class MsgList extends wepy.page {
+    data={
+      list: [
+      {
+        name:'孙悟空',
+        id:'id',
+        count:'2',
+        avatar:"https://s1.ljcdn.com/hulk-web/static/m/images/home/head_bg.jpg",
+        text:'hello',
+        updated:'10:10'
+      },
+      {
+        name:'康熙',
+        id:'id',
+        count:'2',
+        avatar:"https://s1.ljcdn.com/hulk-web/static/m/images/home/head_bg.jpg",
+        text:'什么时间可以看房呢？',
+        updated:'10:10'
+      }
+      ]
+    }
+  }
+</script>
+
+<style lang="less">
+  page{
+  height: 100%
+}
+.container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  background:#fff;
+  
+  box-sizing: border-box;
+} 
+.padding{
+  padding:20rpx;
+}
+.padding_half{
+  padding: 10rpx;
+}
+.graySpace{
+  padding-left: 40rpx;
+  background: #eee;
+  font-size: 12px;
+  min-height: 30rpx;
+}
+.item-avatar .text_box,.item-avatar-lg .text_box{
+  display: flex;
+  flex-direction: column
+}
+.flex-row{
+  display: flex;
+  flex-direction: row;
+}
+.flex-column{
+  display: flex;
+  flex-direction: column
+}
+.flex-center{
+  display: flex;
+  justify-content: center;
+}
+.flex{
+  display: flex;
+}
+.title{
+  font-family: "微软雅黑";
+  font-size: 28rpx;
+}
+.message{
+  font-size: 26rpx;
+}
+
+.item-avatar-lg,.item-avatar-md,.item-avatar-sm,.item-avatar-xs{
+  display: flex;
+  padding: 20rpx 30rpx;
+  border-bottom: 1rpx solid #eee;
+  cursor: pointer;
+  position:relative;
+}
+.item-avatar-lg image{
+  float: left;
+  width: 125rpx;
+  height: 125rpx;
+  box-sizing: border-box
+}
+.item-avatar-md image{
+  float: left;
+  width: 85rpx;
+  height: 85rpx;
+  box-sizing: border-box
+}
+.item-avatar-sm image{
+  float: left;
+  width: 65rpx;
+  height: 65rpx;
+  box-sizing: border-box
+}
+.item-avatar-xs image{
+  float: left;
+  width: 45rpx;
+  height: 45rpx;
+  box-sizing: border-box
+}
+
+.item-avatar-md .marks{
+  position: absolute;
+  top: 3px;
+  left: 90rpx;
+  width: 34rpx;
+  height: 34rpx;
+  line-height: 34rpx;
+  background: red;
+  border-radius: 50%;
+  color: white;
+  text-align: center;
+  font-size: 24rpx;
+}
+.item-avatar-lg .item-text,.item-avatar-md .item-text,.item-avatar-sm .item-text,.item-avatar-xs .item-text{
+  padding-left: 10px;
+}
+.item-avatar-md .item-time{
+  position: absolute;
+  right: 20rpx;
+}
+.clearfix{
+  overflow: hidden;
+}
+.icon::before{
+  font-size: 70rpx
+}
+.floatR{
+  float: right;
+}
+
+
+
+
+ .userItem{
+  height:80rpx;
+  padding:5px 10px;
+  display: flex;
+  border-bottom:1px solid #ddd;
+}
+.pic image{
+  width:80rpx;
+  height: 80rpx;
+  margin-right: 10px;
+}
+.userItem .name{
+  font-size: 15px;
+  padding:5px 0;
+  font-weight: bold;
+  flex:2;
+}
+.userItem .time{
+  font-size: 13px;
+}
+
+.message{
+  color: gray;
+  margin-top:4px;
+}
+.messagetime{
+  color:gray;
+  font-size:13px;
+}
+
+.tips{
+  margin-top:50px;
+  color: gray;
+  text-align: center;
+}
+</style>

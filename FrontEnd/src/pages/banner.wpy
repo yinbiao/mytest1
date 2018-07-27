@@ -1,0 +1,150 @@
+<template>
+  <view class="container">
+    <view class='addBtn'>
+      <button class="zan-btn  zan-btn--small zan-btn--primary" @tap='tapAddBtn'>添加banner</button>
+    </view>
+    <view class='imgItem'>
+      <repeat for="{{imgs}}">
+        <!-- <view class='col1'>{{index}}.</view> -->
+        <view class='col2'>
+          <image src="{{item.imageSrc}}"></image>
+          <view class='deleteBtn'>
+            <button class="zan-btn zan-btn--small zan-btn--warn" @tap='tapDelete({{item}},{{index}})'>{{index}}. 删除</button>
+          </view>
+        </view>
+      </repeat>
+    </view>
+    <view class='submitBtn'>
+      <button @tap='tapSubmitBtn' class="zan-btn zan-btn--primary">提交</button>
+    </view>
+  </view>
+</template>
+<script>
+import wepy from 'wepy'
+import util from '../utils/util.js'
+import http from '../utils/http.js'
+export default class MyWallet extends wepy.page {
+  config = {
+    navigationBarTitleText: '设置更新首页banner',
+    enablePullDownRefresh: true
+  }
+
+  computed = {
+    userInfo() {
+      return this.$parent.globalData.userInfo
+    }
+
+  }
+
+  data = {
+    imgs: []
+
+  }
+
+
+  methods = {
+    tapSubmitBtn() {
+      const data = this.imgs.map(v => {
+        return {
+          ...v,
+          imageSrc: v.imageSrc.split('/').pop()
+        }
+      })
+      http.post('/user/banner', data).success(res => {
+        wx.showToast({
+          title: '提交成功',
+          icon: 'success',
+          duration: 4000
+        })
+      })
+    },
+    tapAddBtn() {
+      const _ = this;
+      util.chooseImagesAndUpload({
+        success(res, data) {
+          console.log(res)
+          _.imgs.unshift({
+            imageSrc: _.$parent.globalData.baseAssetsUrl + res.data
+          })
+          _.$apply()
+
+        }
+      })
+    },
+    tapDelete(item, index) {
+      const _this = this
+      wx.showModal({
+        title: '提示',
+        content: `确认删除第 ${index} 张banner码？`,
+        success: function(res) {
+          if (res.confirm) {
+            _this.imgs.splice(index, 1)
+            _this.$apply()
+          } else if (res.cancel) {
+            console.log('用户点击取消')
+          }
+        }
+      })
+    }
+  }
+
+
+  onLoad() {
+    this.intData()
+  }
+
+  intData() {
+    const _this = this
+    const baseUrl = this.$parent.globalData.baseAssetsUrl;
+    http.get('/user/banner')
+      .success(res => {
+        _this.imgs = res.data.map(v => {
+          return {
+            imageSrc: baseUrl + v.imageSrc
+          }
+        })
+        _this.$apply()
+      })
+  }
+
+onPullDownRefresh(){
+    console.log('onPullDownRefresh')
+    wx.stopPullDownRefresh()
+  }
+}
+
+</script>
+<style lang="less">
+.addBtn {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px;
+  background: #fff;
+}
+
+.imgItem {
+  background: #fff;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 5px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  .col2 {
+    text-align: center;
+    padding: 10px;
+    overflow: hidden;
+    flex-basis: 28%;
+    image {
+      width: 100%;
+      height: 100px;
+    }
+  }
+}
+
+.submitBtn {
+  width: 90%;
+  margin: 0 auto;
+  margin-top: 20px;
+}
+
+</style>

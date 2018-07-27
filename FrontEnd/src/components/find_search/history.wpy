@@ -1,0 +1,77 @@
+<template>
+  <view class="historyArea">
+    <view wx:if="{{history.length > 0}}">
+      <view class="mg-cell areaTitle">
+        <text class="mg-font-28 mg-lightgray">历史记录</text>
+        <image
+          src="https://assets.mgzf.com/h5img/f66d81e5567200795b99d3c4fd6afcfb.png"
+          class="btn-clear"
+          @tap="clear" />
+      </view>
+      <view class="history-list">
+        <repeat for="{{history}}" key="index" item="item">
+          <view class="history-list-item" @tap="chooseResult({{item}}, {{index}})">
+            <rich-text class="mg-font-mid" nodes="{{item.showName}}"></rich-text>
+          </view>
+        </repeat>
+      </view>
+    </view>
+    <view wx:else class="history-empty">
+      <text>无搜索历史记录</text>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+export default class History extends wepy.component {
+  props = {
+    history: {
+      type: Array,
+      default: []
+    }
+  }
+
+  methods = {
+    clear () {
+      this.history = []
+      wx.setStorageSync('SEARCH_HISTORY', JSON.stringify(this.history));
+    },
+    chooseResult (item, index) {
+      this.$emit('searchResult', item, index);
+    }
+  }
+}
+</script>
+
+<style lang="less">
+  .historyArea {
+    padding: 30rpx;
+    .areaTitle {
+      justify-content: space-between;
+    }
+    .btn-clear{
+      width: 22rpx;
+      height: 28rpx;
+    }
+    .history-list{
+      margin: 15rpx 0;
+    }
+    .history-list-item {
+      padding: 20rpx 15rpx;
+      font-size: 32rpx;
+      color:#4a4a4a;
+      border-bottom: 1rpx solid #e5e5e5;
+      .mg-font-mini {
+        margin-left: 6rpx;
+      }
+    }
+    .history-empty {
+      padding: 100rpx 0;
+      text-align: center;
+      font-size: 32rpx;
+      color: #9b9b9b;
+      border-top: 1rpx solid #e5e5e5;
+    }
+  }
+</style>

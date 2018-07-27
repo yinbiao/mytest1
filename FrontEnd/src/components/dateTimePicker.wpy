@@ -1,0 +1,88 @@
+<template>
+  <view>
+    <view>{{year}}年{{month}}月{{day}}日</view>
+    <picker-view indicator-style="height: 50px;" style="width: 100%; height: 300px;" value="{{value}}" bindchange="bindChange">
+      <picker-view-column>
+        <view wx:for="{{years}}" style="line-height: 50px">{{item}}年</view>
+      </picker-view-column>
+      <picker-view-column>
+        <view wx:for="{{months}}" style="line-height: 50px">{{item}}月</view>
+      </picker-view-column>
+      <picker-view-column>
+        <view wx:for="{{days}}" style="line-height: 50px">{{item}}日</view>
+      </picker-view-column>
+      <picker-view-column>
+        <view wx:for="{{times}}" style="line-height: 50px">{{item}}</view>
+      </picker-view-column>
+    </picker-view>
+  </view>
+
+</template>
+<script>
+  import wepy from 'wepy'
+  export default class DateTimePicker extends wepy.page {
+    data={
+      years: [],
+      months: [],
+      days: [],
+      value: [],
+    }
+
+    bindChange(e) {
+      const val = e.detail.value
+      if(this.value[0]!=val[0] ||this.value[1]!=val[1]){
+        //年和月份变了，天需要重新初始化
+        const daysCurrentMonth=new Date(this.years[val[0]],this.months[val[1]],0).getDate()
+        let day=1
+        //当前月,起始天数从当天开始
+        const date=new Date()
+        const year=date.getFullYear()
+        const month=date.getMonth()+1
+        if(year==this.years[val[0]] && month==this.months[val[1]]){
+          day=date.getDate()
+        }
+        this.days.length=0
+        for (let i = day ; i <= daysCurrentMonth; i++) {
+          this.days.push(i)
+        }
+
+      }
+      this.value=val
+      let selectedVal=this.data.years[val[0]]+'-'+this.data.months[val[1]]+'-'+this.data.days[val[2]];
+      this.$emit('selectedChanged',selectedVal)
+      console.log(val,selectedVal)
+    }
+
+    initDate(){
+      const date=new Date()
+      const year=date.getFullYear()
+      const month=date.getMonth()+1
+      const day=date.getDate()
+      const daysCurrentMonth=new Date(year,month,0).getDate()
+      for (let i = year; i <= year+5; i++) {
+        this.years.push(i)
+      }
+
+      for (let i = month ; i <= 12; i++) {
+        this.months.push(i)
+      }
+
+      for (let i = day ; i <= daysCurrentMonth; i++) {
+        this.days.push(i)
+      }
+      this.value=[0,0,0]
+      //return {years,months,days}
+    }
+
+
+    onLoad(){
+       this.initDate()
+       this.$apply()
+    }
+
+  }
+</script>
+
+<style lang="less">
+ 
+</style>

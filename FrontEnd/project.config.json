@@ -1,0 +1,15 @@
+{
+	"description": "hufangtong",
+	"setting": {
+		"urlCheck": false,
+		"es6": false,
+		"postcss": false,
+		"minified": false,
+		"newFeature": true
+	},
+	"compileType": "miniprogram",
+	"appid": "wx4da3552bdd8bf8cb",
+	"projectname": "hufangtong",
+	"miniprogramRoot": "./dist",
+	"condition": {}
+}

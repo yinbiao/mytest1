@@ -1,0 +1,197 @@
+<template>
+  <view class="container">
+    <view class="zan-panel">
+      <view class="zan-panel-title zan-c-gray-darker">充值金额</view>
+      <view class="zan-cell zan-field wrapped">
+        <view class="zan-cell__hd zan-field__title">¥</view>
+        <input
+          type="text"
+          name=""
+          disabled=""
+          focus=""
+          value=""
+          placeholder="请输入充值金额"
+          class="zan-field__input zan-cell__bd"
+          placeholder-class="zan-field__placeholder"
+          bindinput="getRechargeNum"
+          bindfocus=""
+          bindblur=""
+          data-component-id=""/>
+      </view>
+    </view>
+
+    <view class="zan-btns">
+      <button class="zan-btn zan-btn--primary" @tap="nextStep">下一步</button>
+    </view>
+
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+
+  export default class RechargeWallet extends wepy.page {
+    config = {
+      navigationBarTitleText: '充值',
+      enablePullDownRefresh: true
+    }
+
+    computed = {
+      userInfo () {
+        return this.$parent.globalData.userInfo
+      }
+
+    }
+
+    data = {
+      rechargeNum:0,
+      showBottomPopup: false
+    }
+
+
+    methods = {
+      nextStep(){
+        wx.showModal({
+          title: '提示',
+          content: '商户平台支付设置,开通支付',
+          success: function(res) {
+            if (res.confirm) {
+              console.log('用户点击确定')
+            } else if (res.cancel) {
+              console.log('用户点击取消')
+            }
+          }
+        })
+        //https://developers.weixin.qq.com/miniprogram/dev/api/api-pay.html#wxrequestpaymentobject
+        //后台签名支付接口
+        // wx.requestPayment({
+        //    'timeStamp': '',
+        //    'nonceStr': '',
+        //    'package': '',
+        //    'signType': 'MD5',
+        //    'paySign': '',
+        //    'success':function(res){
+        //    },
+        //    'fail':function(res){
+        //    }
+        // })
+      },
+      getRechargeNum(e){
+        this.rechargeNum=e.detail.value
+      },
+      pushToPage (address) {
+        // if (!this.userInfo) {
+        //   this.$navigate('./my_login')
+        // } else {
+          this.$navigate(address);
+        // }
+      },
+      isLogin () {
+        if (!this.userInfo) {
+          this.$navigate('./my_login')
+        }
+        return !!this.userInfo
+      }
+    }
+
+    onLoad () {
+    }
+
+    onShow () {
+      // this.$parent.setTabBarBadge()
+      this.$apply()
+    }
+
+    onPullDownRefresh () {
+      // setTimeout(() => {
+      //   this.$parent.getRenterInfo(() => {
+      //     this.$apply()
+      //   })
+      //   wx.stopPullDownRefresh()
+      // }, 500)
+    }
+  }
+</script>
+
+<style lang="less">
+  .zan-field__title{
+    min-width: 0;
+  }
+  .zan-field{
+    padding:20px 15px;
+  }
+  .zan-field__title{
+    font-size:24px;
+  }
+  .zan-field__input{
+    font-size:20px;
+  }
+  .manage {
+    text-align: center;
+    padding: 30rpx 0;
+    .cellItem {
+      flex: 1;
+      padding: 10rpx 0;
+    }
+    .cellItem+.cellItem {
+      border-left: 1rpx solid #e5e5e5;
+    }
+  }
+
+  .menuContainer {
+    padding:0 30rpx 0 28rpx;
+    .menuItem {
+      justify-content: space-between;
+      min-height: 100rpx;
+      border-bottom: 1rpx solid #e5e5e5;
+      &:last-child {
+        border-bottom: none;
+      }
+      view.zan-icon{
+        margin-right: 16rpx;
+      }
+      .iconImg {
+        width: 30rpx;
+        height: 30rpx;
+        margin-right: 16rpx;
+      }
+      .icon-arrow-right {
+        margin-left: 16rpx;
+      }
+    }
+  }
+
+
+.popup-example--center {
+  border-radius: 4px;
+}
+
+.popup-example--right .zan-popup__container {
+  top: 0;
+  bottom: 0;
+}
+
+.popup-example--left .zan-popup__container {
+  top: 0;
+  bottom: 0;
+}
+
+.popup-example--top .zan-popup__container {
+  left: 0;
+  right: 0;
+  padding: 15px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  font-size: 16px;
+}
+.popup-example--top .zan-popup__mask {
+  opacity: 0;
+}
+
+.popup-example--bottom .zan-popup__container {
+  left: 0;
+  right: 0;
+}
+
+
+</style>

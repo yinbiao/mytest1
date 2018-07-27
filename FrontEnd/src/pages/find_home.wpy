@@ -1,0 +1,331 @@
+<template>
+  <view class="container">
+    <swiper indicator-dots="{{indicatorDots}}" style="height:265px;" autoplay="{{autoplay}}" interval="{{interval}}" duration="{{duration}}">
+      <block wx:for="{{imgs}}">
+        <swiper-item>
+          <image src="{{item.imageSrc}}" class="slide-image" style="width:100%" width="355" height="150" />
+        </swiper-item>
+      </block>
+    </swiper>
+    <view class="home_search">
+      <view class="mg-cell searchInfo">
+        <!-- <view class="city" @tap="chooseCity">
+          <text>{{currentCity.shortName}}</text>
+          <view class="icon-arrow-bottom"></view>
+        </view> -->
+        <view class="searchArea mg-color-light" @tap="gotoRoomFilter('search')">
+          <icon type="search" size="14" />
+          <text>楼盘</text>
+        </view>
+      </view>
+    </view>
+    <view class="home_top">
+      <view class="sections">
+        <view class="section" @tap="gotoRoomFilter()">
+          <image src="https://assets.mgzf.com/appimg/d8cd0cb2cecd635858a98344b4e5870b.png"></image>
+          <text class="title">楼盘</text>
+        </view>
+        <view class="section" @tap="gotoDemandList()">
+          <image src="https://assets.mgzf.com/appimg/26f68e639e33db01ebb94b87fc7d3763.png"></image>
+          <text class="title">需求</text>
+        </view>
+        <view class="section" @tap="gotoCustomer()">
+          <image src="https://assets.mgzf.com/appimg/650db4d347729b5e577971c640fba9a2.png"></image>
+          <text class="title">客户</text>
+        </view>
+      </view>
+    </view>
+    <view class="recommend">
+      <view class="recommendTitle" wx:if="{{recommendItemArray.length>0}}">推荐楼盘</view>
+      <roomListVertical :roomList.sync="recommendItemArray"></roomListVertical>
+    </view>
+    <!-- <DevEntry></DevEntry> -->
+    <Authorize @tokenReady='tokenReady' />
+  </view>
+</template>
+<script>
+import wepy from 'wepy'
+import http from '../utils/http.js'
+import C from '../constant/index.js'
+import Authorize from '../components/authorize'
+import RoomListVertical from '../components/roomList_vertical'
+
+import DevEntry from './dev_entry'
+
+
+
+export default class FindHome extends wepy.page {
+  config = {
+    navigationBarTitleText: '沪房通',
+    enablePullDownRefresh: true
+  }
+
+  components = {
+    roomListVertical: RoomListVertical,
+    DevEntry: DevEntry,
+    Authorize
+  }
+
+  data = {
+    currentCity: {
+      shortName: '嘉兴'
+    },
+    building: [],
+    // 推荐房源
+    recommendItemArray: [],
+    imgs: [],
+    indicatorDots: true,
+    autoplay: false,
+    interval: 5000,
+    duration: 1000,
+  }
+
+
+  methods = {
+    chooseCity() {
+      this.$navigate('./find_cityList')
+    },
+    gotoRoomFilter(tapSearch) {
+      let params = {}
+      if (tapSearch) {
+        params['tapSearch'] = true
+      }
+      this.$navigate('./find_buildingList', params)
+    },
+    gotoWebview(url) {
+      this.$navigate('./webviewPage', {
+        url: url
+      })
+    },
+    gotoDemandList() {
+      this.$navigate('./custom_demandList')
+    },
+
+    gotoCustomer() {
+      const userInfo = this.$parent.globalData.userInfo
+      if (userInfo.permission.getMyOrders) {
+        this.$navigate('./my_customer')
+      } else {
+        wx.showModal({
+          title: '提示',
+          content: '没有权限,请联系您企业管理员。',
+        })
+      }
+    }
+  }
+  onLoad() {
+
+    this.intBanner()
+    this.initReco()
+    //首页需要等待token完成后才能请求需授权接口
+
+    // this.$navigate('./vipList') //only for test
+     // this.$navigate('./bill') //only for test
+  }
+  events = {
+    tokenReady(userInfo) {
+      //this.methods.gotoCustomer = this.methods._gotoCustomer
+
+      // this.initReco()
+    }
+  }
+  intBanner() {
+    const _this = this
+    const baseUrl = this.$parent.globalData.baseAssetsUrl;
+    http.get('/user/banner')
+      .success(res => {
+        _this.imgs = res.data.map(v => {
+          return {
+            imageSrc: baseUrl + v.imageSrc
+          }
+        })
+        _this.$apply()
+      })
+  }
+  initReco() {
+    const currentCity = wx.getStorageSync('currentCity')
+    console.log('currentCity=>', currentCity)
+
+    const params = {}
+    if (currentCity && currentCity.id) {
+      params.city = currentCity.id
+      this.currentCity = currentCity;
+      this.$parent.globalData.currentCity = currentCity
+    }
+    let baseUrl = this.$parent.globalData.baseAssetsUrl
+    http.get('/building/list', params)
+      .success(res => {
+        this.building = res
+        //console.log('/building/list=>',res)
+        this.recommendItemArray = res.data.map(item => {
+          return {
+            ...item,
+            banner: baseUrl + item.banners.split(',')[0],
+            propertyTypeName: item.propertyType && C.propertyType[item.propertyType].name,
+            saleTypeName: item.saleType && C.saleType[item.saleType].name
+          }
+        })
+        this.$apply()
+        //console.log('this.recommendItemArray=>',this.recommendItemArray)
+      })
+
+  }
+
+
+  onPullDownRefresh() {
+    console.log('onPullDownRefresh')
+    wx.reLaunch({ url: './find_home' })
+
+    // this.intData()
+    // this.initReco()
+    wx.stopPullDownRefresh()
+  }
+
+}
+
+</script>
+<style lang="less">
+.recommend {
+  .roomList_vertical {
+    margin-top: 0
+  }
+}
+
+.recommendTitle {
+  font-size: 36rpx;
+  color: #323232;
+  margin: 10rpx 40rpx;
+  text-align: left;
+  line-height: 60rpx;
+}
+
+.home_search {
+  position: absolute;
+  top: 30rpx;
+  width: 100%;
+}
+
+.searchInfo {
+  height: 76rpx;
+  margin: 0 30rpx;
+  border-radius: 8rpx;
+  background-color: rgba(255, 255, 255, 0.5);
+  .city {
+    margin-left: 24rpx;
+    white-space: nowrap;
+    margin-right: 20rpx;
+    color: #222222;
+    display: flex;
+    align-items: center;
+  }
+  .searchArea {
+    /*border-left: 1rpx solid #c1c1c1;*/
+    width: 100%;
+    padding-left: 20rpx;
+    font-size: 28rpx;
+    display: flex;
+    align-items: center;
+    text {
+      margin-left: 10rpx;
+    }
+  }
+}
+
+.home_top {
+  padding-bottom: 40rpx;
+  background-color: #fff;
+
+  .sections {
+    .section {
+      width: 33%;
+      display: inline-flex;
+      flex-flow: column wrap;
+      align-items: center;
+      margin-top: 40rpx;
+      .sectionContent {
+        width: 84rpx;
+        height: 84rpx;
+        position: relative;
+        .hot {
+          position: absolute;
+          top: -18rpx;
+          right: -28rpx;
+          padding: 4rpx 14rpx;
+          border-bottom-left-radius: 0;
+          border-width: 2rpx;
+        }
+      }
+      image {
+        width: 84rpx;
+        height: 84rpx;
+      }
+      .title {
+        color: #5a5a5a;
+        margin-top: 10rpx;
+      }
+    }
+  }
+}
+
+.border-line {
+  margin: 0 24rpx;
+  border-top: 1rpx solid #e5e5e5;
+}
+
+.mg-content-block>.border-line:first-child {
+  display: none;
+}
+
+.joinStyle {
+  .content {
+    height: 80rpx;
+    margin: 0 24rpx;
+    border-radius: 8rpx;
+    background-color: #f5f5f5;
+    justify-content: space-between;
+    .mg-color-dark {
+      margin-left: 20rpx;
+      border-left: 4rpx solid #fd9313;
+      border-radius: 2rpx;
+      line-height: 1;
+      padding-left: 10rpx;
+    }
+    .mg-color-light {
+      margin-right: 20rpx;
+    }
+  }
+}
+
+.mg-content-block>.joinStyle:last-child {
+  padding-bottom: 20rpx;
+}
+
+.home_bottom {
+  padding: 16rpx 0;
+  display: flex;
+  flex-flow: row wrap;
+  .section {
+    width: 50%;
+    display: inline-flex;
+    align-items: center;
+    padding: 12rpx 24rpx;
+    box-sizing: border-box;
+    image {
+      width: 84rpx;
+      height: 84rpx;
+      margin-right: 20rpx;
+      flex: none;
+    }
+    .sectionText {
+      display: flex;
+      flex-flow: column;
+    }
+  }
+}
+
+.container {
+  padding-bottom: 20rpx;
+  position: relative;
+}
+
+</style>

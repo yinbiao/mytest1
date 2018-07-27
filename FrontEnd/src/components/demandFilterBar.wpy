@@ -1,0 +1,491 @@
+<template>
+  <view class="zan-tab">
+    <block>
+      <scroll-view class="zan-tab__bd zan-tab__bd--scroll" scroll-x="true">
+        <view class="zan-tab__item {{tabIndex == 0 ? 'zan-tab__item--selected':''}}" @tap='tabChange(0)'>
+          <view class="zan-tab__title">新房</view>
+        </view>
+        <view class="zan-tab__item {{tabIndex == 1 ? 'zan-tab__item--selected':''}}" @tap='tabChange(1)'>
+          <view class="zan-tab__title">二手房</view>
+        </view>
+         <view class="zan-tab__item {{tabIndex == 2 ? 'zan-tab__item--selected':''}}" @tap='tabChange(2)'>
+          <view class="zan-tab__title">租房</view>
+        </view>
+      </scroll-view>
+    </block>
+  </view>
+  <view id="roomListSearchBar" style='position:fixed;width:100%;z-index:999;'>
+    <view>
+      <view class="roomSearchBar">
+        <view class="{{isShowPicker ? 'bgView' : 'bgView hideChooseDiv'}}" @touchmove.stop="blankHandle" @tap="bgHidePicker">
+        </view>
+        <view class="picker areaPicker">
+          <view class="{{(hasAreaParam) ? 'showText activeStatus' : 'showText'}} {{(isShowPicker === 1) ? 'openActive' : ''}}" @tap="showTextClick({{1}})">
+            <view class="showTextBorder">
+              <text>{{districtTitle}}</text>
+              <i class="icon-triangle"></i>
+            </view>
+          </view>
+          <scroll-view scroll-y class="{{(isShowPicker === 1) ? 'pricePickerView pickerView' : 'pricePickerView pickerView hideChooseDiv'}}" style="max-height: {{scrollContentHeight + 'rpx'}}">
+            <ChooseGeo @choosedGeo="choosedGeo" />
+            <!-- <repeat for="{{areaPickerData}}" key="index">
+              <view class="{{districtIndex === index ? 'centerCell selectedCenter' : 'centerCell'}}" @tap="tabItemClick('district',{{item}},{{index}})">
+                <view class="title">{{item.name}}</view>
+              </view>
+            </repeat> -->
+          </scroll-view>
+        </view>
+        <view class="picker pricePicker">
+          <view class="{{(hasPriceParam) ? 'showText activeStatus' : 'showText'}} {{(isShowPicker === 2) ? 'openActive' : ''}}" @tap="showTextClick({{2}})">
+            <view class="showTextBorder">
+              <text>{{priceTitle}}</text>
+              <i class="icon-triangle"></i>
+            </view>
+          </view>
+          <scroll-view scroll-y class="{{(isShowPicker === 2) ? 'pricePickerView pickerView' : 'pricePickerView pickerView hideChooseDiv'}}" style="max-height: {{scrollContentHeight + 'rpx'}}">
+            <repeat for="{{budgetRangeList}}" key="index">
+              <view class="{{priceIndex === index ? 'centerCell selectedCenter' : 'centerCell'}}" @tap="tabItemClick('price',{{item}},{{index}}))">
+                <view class="title">{{item.name}}</view>
+              </view>
+            </repeat>
+          </scroll-view>
+        </view>
+        <view class="picker sortPicker">
+          <view class="{{(hasSortParam) ? 'showText activeStatus' : 'showText'}} {{(isShowPicker === 3) ? 'openActive' : ''}}" @tap="showTextClick({{3}})">
+            <view class="showTextBorder">
+              <text>{{propertyTypeTitle}}</text>
+              <i class="icon-triangle"></i>
+            </view>
+          </view>
+          <scroll-view scroll-y class="{{(isShowPicker === 3) ? 'sortPickerView pickerView' : 'sortPickerView pickerView hideChooseDiv'}}" style="max-height: {{scrollContentHeight + 'rpx'}}">
+            <repeat for="{{propertyTypeList}}" key="index">
+              <view class="{{propertyTypeIndex === index ? 'centerCell selectedCenter' : 'centerCell'}}" @tap="tabItemClick('propertyType',{{item}},{{index}}))">
+                <view class="title">{{item.name}}</view>
+              </view>
+            </repeat>
+          </scroll-view>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+<script>
+import wepy from 'wepy'
+import http from '../utils/http.js'
+import ChooseGeo from '../components/chooseGeo'
+import { budgetRangeList, propertyTypeList } from '../constant/index.js'
+// const pricePickerData = [
+//   { name: '不限', minPrice: 0 },
+//   { name: '2000元以下', minPrice: 0, maxPrice: 2000 },
+//   { name: '2000-3000元', minPrice: 2000, maxPrice: 3000 },
+//   { name: '3000-5000元', minPrice: 3000, maxPrice: 5000 },
+//   { name: '5000-6500元', minPrice: 5000, maxPrice: 6500 },
+//   { name: '6500-8000元', minPrice: 6500, maxPrice: 8000 },
+//   { name: '8000-10000元', minPrice: 8000, maxPrice: 10000 },
+//   { name: '10000元以上', minPrice: 10000 }
+// ]
+// const houseTypeData = [
+//   { name: '不限' },
+//   { name: '住宅' },
+//   { name: '洋房' },
+//   { name: '公寓' },
+//   { name: '别墅' },
+//   { name: '商铺' },
+//   { name: '写字楼' }
+// ]
+
+
+export default class DemandFilterBar extends wepy.component {
+
+  props = {
+    originParam: {
+      type: Object,
+      default: {}
+    },
+    keywordBar: String
+  }
+  components = {
+    ChooseGeo
+  }
+  data = {
+    tabIndex:0,
+    scrollTop: 0,
+    scrollContentHeight: 720,
+    scrollTid: null,
+    isInitedOriginParam: false,
+    isInitedAreaParam: false,
+    originTop: 0, // 默认到顶部距离
+    isShowPicker: 0, // 1: 显示区域；2：价格；3：房屋类型
+
+    // 区域选择参数
+    areaPickerData: [{ name: '不限', id: 0 }],
+    districtTitle: '区域',
+    districtIndex: 0, // 当前选中的index
+    // 预算范围
+    budgetRangeList,
+    priceTitle: '预算范围',
+    priceIndex: 0,
+    // 物业类型
+    propertyTypeList,
+    propertyTypeTitle: '物业类型',
+    propertyTypeIndex: 0,
+
+    // 集合参数
+    params: {
+      //search:null,
+      //district:null,//区域id
+      //price:null,
+      //houseType:null,
+    },
+    keyword: ''
+  }
+
+  watch = {
+
+  }
+  computed = {
+
+  }
+  showPicker(index) {
+    this.isShowPicker = index;
+    this.$apply();
+  }
+
+  hidePicker() {
+    this.isShowPicker = false;
+    this.$apply();
+  }
+
+
+  methods = {
+    tabChange(index){
+      this.tabIndex=index//0新房，1二手房，2租房
+      this.params.handsType=index
+      this.$emit('searchDataEvent', this.params)
+    },
+    showTextClick(index) {
+      if (this.isShowPicker === index) {
+        this.hidePicker();
+      } else {
+        this.showPicker(index);
+      }
+    },
+    blankHandle() {},
+
+    tabItemClick(key, item, index) {
+      this[key + 'Index'] = index
+      this[key + 'Title'] = item.name
+      if (index == 0) {
+        if (key == 'price') {
+          delete this.params['budgetMin']
+          delete this.params['budgetMax']
+        }
+        delete this.params[key]
+      } else {
+        switch (key) {
+          // case 'district':
+          //   this.params[key] = item.id
+          //   break;
+
+          case 'price':
+            this.params['budgetMin'] = item.budgetMin
+            this.params['budgetMax'] = item.budgetMax
+            break;
+
+          default:
+            this.params[key] = item.type
+            break;
+        }
+
+      }
+      this.methods.bgHidePicker.call(this)
+      this.$emit('searchDataEvent', this.params)
+    },
+    bgHidePicker() {
+      this.isShowPicker = false;
+      this.$apply();
+    }
+
+
+  }
+
+  bgHidePicker() {
+    this.isShowPicker = false;
+    this.$apply();
+  }
+
+  events = {
+    choosedGeo(data) {
+      this.districtTitle = data.city.shortName + data.district.shortName
+      this.isShowPicker = 0
+      this.params = {
+        ...this.params,
+        districtId: data.district.id,
+        cityId: data.city.id
+      }
+      this.$emit('searchDataEvent', this.params)
+    }
+  }
+
+  onLoad() {
+
+    const currentCity = wx.getStorageSync('currentCity')
+    let data = {}
+    // if(currentCity && currentCity.id){
+    //   data['parentId']=currentCity.id
+    // }
+
+    http.get('/user/city', data)
+      .success(res => {
+        this.areaPickerData = this.areaPickerData.concat(res.data)
+        this.$apply()
+      })
+  }
+}
+
+</script>
+<style lang="less">
+.zan-tab__item--selected .zan-tab__title{
+  border-bottom: none;
+}
+.zan-tab__item{width: 33.3%}
+#roomListSearchBar {
+  height: 88rpx;
+}
+
+#roomListSearchBar.hasKeywordBar {
+  height: 188rpx;
+}
+
+.fixTopFix {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 2;
+}
+
+.topSearch {
+  height: 100rpx;
+  padding: 0 30rpx;
+  background-color: #fff;
+  display: flex;
+  flex-flow: column;
+  justify-content: center;
+  .searchArea {
+    box-sizing: border-box;
+    width: 100%;
+    height: 60rpx;
+    border-radius: 8rpx;
+    background-color: #f1f1f1;
+    padding-left: 20rpx;
+    font-size: 28rpx;
+    display: flex;
+    align-items: center;
+    input {
+      flex: 1;
+      height: 60rpx;
+      margin: 0 10rpx;
+      padding: 6rpx;
+      line-height: 48rpx;
+      color: #3f3f3f;
+    }
+  }
+}
+
+.roomSearchBar {
+  position: relative;
+  width: 100%;
+  height: 88rpx;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  background-color: #fff;
+  border-top: 1rpx solid #f44;
+  border-bottom: 1rpx solid #e5e5e5;
+  .bgView {
+    position: absolute;
+    top: 86rpx;
+    left: 0;
+    right: 0;
+    height: 2000rpx;
+    background-color: #000000;
+    opacity: 0.1;
+  }
+  .picker {
+    flex: 1;
+    color: #444444;
+    .showText {
+      height: 88rpx;
+      display: flex;
+      flex-flow: nowrap column;
+      justify-content: center;
+      .showTextBorder {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 40rpx;
+      }
+    }
+  }
+  .picker+.picker .showTextBorder {
+    border-left: 1rpx solid #e5e5e5;
+  }
+
+  .pickerView {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 84rpx;
+    background-color: #ffffff;
+    overflow: hidden;
+    z-index: 2;
+    border-bottom: solid 1rpx #e5e5e5;
+    border-top: solid 1rpx #e5e5e5;
+    overflow: hidden;
+  }
+
+  .areaPickerView {
+    .chooseContentDiv {
+      display: flex;
+      height: 100%;
+      .left {
+        flex: 0;
+        height: 100%;
+        transition: all 0.25s;
+        .leftCell {
+          padding: 20rpx 0;
+          position: relative;
+          text-align: left;
+          .title {
+            margin-left: 14rpx;
+            font-size: 28rpx;
+            line-height: 50rpx;
+            color: #323D42;
+            border-left: 6rpx solid transparent;
+            padding-left: 10rpx;
+          }
+        }
+        .leftCell+.leftCell {
+          border-top: solid 1rpx #e5e5e5;
+        }
+        .selectedLeft {
+          .title {
+            color: #f65000;
+          }
+        }
+        .selectedHasLast {
+          background-color: #e9e7e7;
+          .title {
+            border-left: 6rpx solid #FF5353;
+          }
+        }
+      }
+      .left+.left {
+        border-left: solid 1rpx #f5f5f5;
+      }
+      .flex1 {
+        flex: 1 !important;
+      }
+    }
+  }
+
+  .pricePickerView,
+  .sortPickerView {
+    .centerCell {
+      padding: 20rpx 0;
+      text-align: center;
+      .title {
+        font-size: 28rpx;
+        line-height: 50rpx;
+        color: #323D42;
+      }
+    }
+    .centerCell+.centerCell {
+      border-top: solid 1rpx #e5e5e5;
+    }
+    .selectedCenter {
+      .title {
+        color: #f65000;
+      }
+    }
+  }
+
+  .otherPickerView {
+    .chooseContentDiv {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 100rpx;
+      .typeTitle {
+        line-height: 60rpx;
+        font-size: 32rpx;
+        color: #444444;
+        padding-left: 30rpx;
+      }
+      .itemsView {
+        padding: 0 15rpx;
+        .itemView {
+          display: inline-block;
+          padding: 15rpx;
+          width: 33.3%;
+          box-sizing: border-box;
+          .itemBtn {
+            border: 2rpx solid #e3e4e6;
+            color: #4a4a4a;
+            line-height: 56rpx;
+            font-size: 24rpx;
+            background-color: #ffffff;
+            &::after {
+              content: normal;
+            }
+          }
+          &.selected {
+            .itemBtn {
+              border: 2rpx solid #f65000;
+              color: #f65000;
+            }
+          }
+        }
+      }
+    }
+    .menuBtnView {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 80rpx;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      .menuBtn {
+        flex: 1;
+        height: 80rpx;
+        line-height: 78rpx;
+        font-size: 32rpx;
+        border-radius: 0;
+        &::after {
+          content: normal;
+        }
+      }
+      .otherResetBtn {
+        color: #979797;
+        background-color: #ffffff;
+        border-top: 1rpx solid #e5e5e5;
+      }
+      .otherOkBtn {
+        color: #ffffff;
+        background-color: #F54F00;
+        border-top: 1rpx solid #F54F00;
+      }
+    }
+  }
+
+  .hideChooseDiv {
+    display: none;
+    height: 0 !important;
+  }
+}
+
+</style>

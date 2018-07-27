@@ -1,0 +1,452 @@
+<template>
+  <view class="roomList_vertical">
+    <!-- 楼盘方 -->
+    <view class="itemListView">
+      <repeat for="{{buildings}}">
+        <view class="actions">
+          <!-- 平台费、上下架、分配维护人 -->
+          <!-- <view class='zan-btn zan-btn--small' @tap="setPlatformFee({{item}})">设置平台费</view> -->
+          <view class='zan-btn zan-btn--small' @tap="lockFee({{item}})" wx:if="{{item.lockPlatformFee ==0}}">解锁楼盘平台费</view>
+          <view class='zan-btn zan-btn--small' @tap="lockFee({{item}},1)" wx:if="{{item.lockPlatformFee ==1}}">锁定楼盘平台费</view>
+
+          <view class='zan-btn zan-btn--small' @tap="downline({{item}})" wx:if="{{item.online ==1}}">下架</view>
+          <view class='zan-btn zan-btn--small' @tap="downline({{item}},1)" wx:if="{{item.online ==0}}">上架</view>
+          <!-- <button class='zan-btn zan-btn--small' @tap="defindServicer">分配维护人</button> -->
+          <picker @change="defindServicerChange({{item}})" value="{{servicerIndex}}" range="{{servicers}}" range-key="name">
+            <view class='zan-btn zan-btn--small'>
+              分配维护人
+            </view>
+          </picker>
+        </view>
+        <view class="roomView" @tap="gotoRoomDetail({{item.id}})">
+          <image class="roomImg" src="{{item.banner}}" mode="aspectFill" lazy-load="true"></image>
+          <view class="roomInfo">
+            <view class="top">
+              <view class="mg-cell mg-color-dark title">
+                <view class="item-title">
+                  <text>{{item.buildingName}} </text>
+                  <text class="servicer"> {{item.platformusername ||item.platformusernickname ||'无维护人'}}</text>
+                </view>
+              </view>
+              <view class="mg-font-small mg-color-normal" style="margin-top:8rpx;">{{item.vipusername||item.nickname}} ·{{item.phonenum}} </view>
+              <view class="mg-font-small mg-color-normal" style="margin-top:8rpx;">
+                {{item.companyName}}
+              </view>
+              <view class="mg-font-small mg-color-light mg-cell" style="margin-top:8rpx;">
+                <!--  <i class="icon-location"></i> -->
+                <view>带看 {{item.orderState6}} | 成交 {{item.orderState10}} </view>
+                <view>{{buildiingCitys}}</view>
+              </view>
+            </view>
+            <view class="bottom">
+              <view class="tags">
+                <text class="label-type3 tag-label" wx:if="{{item.billCount == 0}}">{{'已结'}}</text>
+                <text class="label-type2 tag-label" wx:else>未结{{item.billCount}}</text>
+              </view>
+              <text class="mg-color-orange mg-font-small amount">
+                <text class="mg-color-normal">平台费:</text>
+                <text class="mg-font-mid">{{item.platformFee||'未设置'}}</text>
+              </text>
+            </view>
+          </view>
+          <!--  <view style='display: flex;align-items: center;' >
+            <button class="zan-btn zan-btn--small zan-btn--warn" style="align-self: center;" @tap.stop="tapDelete({{item}},{{index}})">删除</button>
+          </view> -->
+        </view>
+      </repeat>
+    </view>
+    <!-- 中介方 -->
+    <view class="itemListView">
+      <repeat for="{{agencies}}" key="index">
+        <view class="actions">
+          <!-- 平台费、上下架、分配维护人 -->
+          <!-- <view class='zan-btn zan-btn--small' @tap="setPlatformFee">设置平台费</view> -->
+          <view class='zan-btn zan-btn--small' @tap="downline({{item}})" wx:if="{{item.online ==1}}">下架</view>
+          <view class='zan-btn zan-btn--small' @tap="downline({{item}},1)" wx:if="{{item.online ==0}}">上架</view>
+          <!-- <button class='zan-btn zan-btn--small' @tap="defindServicer">分配维护人</button> -->
+          <picker @change="defindServicerChange({{item}})" value="{{servicerIndex}}" range="{{servicers}}" range-key="name">
+            <view class='zan-btn zan-btn--small'>
+              分配维护人
+            </view>
+          </picker>
+        </view>
+        <view class="roomView" @tap="gotoCompanyDetail({{item.id}})">
+          <image class="roomImg" src="{{item.avatarUrl}}" mode="aspectFill" lazy-load="true"></image>
+          <view class="roomInfo">
+            <view class="top">
+              <view class="mg-cell mg-color-dark title">
+                <view class="item-title">
+                  <text>{{item.companyName}}</text>
+                  <text class="servicer"> {{item.platformusername ||item.platformusernickname ||'无维护人'}}</text>
+                </view>
+              </view>
+              <view class="mg-font-small mg-color-normal" style="margin-top:8rpx;"> {{item.vipusername||item.nickname}} ·{{item.phonenum}} </view>
+              <view class="mg-font-small mg-color-normal" style="margin-top:8rpx;">
+                <!-- 徐汇区-永嘉路485弄 -->
+              </view>
+              <view class="mg-font-small mg-color-light mg-cell" style="margin-top:8rpx;">
+                <!--  <i class="icon-location"></i> -->
+                <view>带看 {{item.orderState6}} | 成交 {{item.orderState10}} </view>
+                <!-- <view>水岸金桥苑1,清华园1</view> -->
+                <!-- 可以展开明细 -->
+              </view>
+            </view>
+            <view class="bottom">
+              <view class="tags">
+                <text class="label-type3 tag-label" wx:if="{{item.billCount == 0}}">{{'已结'}}</text>
+                <text class="label-type2 tag-label" wx:else>未结{{item.billCount}}</text>
+              </view>
+              <!-- <text class="mg-color-orange mg-font-small amount">
+                <text class="mg-color-normal">平台费:</text>
+                <text class="mg-font-mid">{{item.platformFee||'未设置'}}</text>
+              </text> -->
+            </view>
+          </view>
+          <!--  <view style='display: flex;align-items: center;' >
+            <button class="zan-btn zan-btn--small zan-btn--warn" style="align-self: center;" @tap.stop="tapDelete({{item}},{{index}})">删除</button>
+          </view> -->
+        </view>
+      </repeat>
+    </view>
+  </view>
+</template>
+<script>
+import wepy from 'wepy'
+import http from '../utils/http.js'
+
+export default class RoomListVertical extends wepy.component {
+  components = {}
+  computed = {
+    userInfo() {
+      return this.$parent.$parent.globalData.userInfo
+    },
+
+  }
+
+  props = {
+    params: {
+      type: Object,
+      default: {}
+    },
+  }
+
+  data = {
+    buildings: [{
+      buildingName: '',
+      buildingId: 1,
+      companyId: 10,
+    }, ],
+    agencies: [],
+    servicers: [],
+    servicerIndex: 0,
+
+  }
+  watch = {
+    params() {
+      console.log(this.params, '9999999')
+      this.fetchData()
+    }
+  }
+  methods = {
+    lockFee(item, lockPlatformFee){
+      const _this=this;
+      const data={ id:item.id,lockPlatformFee}
+      wx.showModal({
+        title: '提示',
+        content: `确认${lockPlatformFee==0?'解锁':'锁定'} ${item.buildingName || item.companyName} 平台费吗?`,
+        success: res => {
+          if (res.confirm) {
+            http.post('/user/lockPlatformFee', data).success(res => {
+              let content = res.data.affectedRows ? '操作成功' : '操作失败'
+              wx.showModal({ title: '提示', showCancel: false, content })
+              _this.fetchData()
+            })
+          }
+        }
+      })
+
+    },
+    downline(item, online) {
+      //上线
+      let url = online == 1 ? '/user/online' : '/user/downline'
+      const _this = this
+      const { id, companyId, buildiingCitys } = item
+      const data = {}
+
+      if (this.params.vipType == 1) { //1楼盘 2中介
+        data.companyId = companyId
+        data.buildingId = id
+      } else {
+        data.companyId = id
+      }
+
+      wx.showModal({
+        title: '提示',
+        content: `确认${online!=1?'下线':'上线'} ${item.buildingName || item.companyName} ?`,
+        success: res => {
+          if (res.confirm) {
+            http.post(url, data).success(res => {
+              let content = res.data.affectedRows ? '操作成功' : '操作失败'
+              wx.showModal({ title: '提示', showCancel: false, content })
+              _this.fetchData()
+            })
+          }
+        }
+      })
+    },
+    defindServicerChange(item, e) {
+      // console.log(arguments)
+      //不用弹出提示
+      this.servicerIndex = e.detail.value
+      const servicer = this.servicers[this.servicerIndex]
+      //buildingId companyId platformUserId vipType
+      //const p = { vipCompanyName, vipType, districtId, platformUserId, settlementType, dateStart, dateEnd }
+      const { buildiingCitys, id, companyId } = item
+      const data = {
+        platformUserId: servicer.id
+      }
+      if (this.params.vipType == 1) { //1楼盘 2中介
+        data.buildingId = id
+      }else{
+        data.companyId=id
+      }
+      
+      http.post('/user/defineServicer', data).success(res => {
+        let content = res.data.affectedRows ? '设置维护人成功' : '设置维护人失败'
+        wx.showModal({ title: '提示', showCancel: false, content })
+        this.fetchData()
+      })
+    },
+    // tapDelete(item, index) {
+    //   const _this = this
+    //   wx.showModal({
+    //     title: '提示',
+    //     content: `确认删除楼盘 ${item.buildingName} 码？`,
+    //     success: function(res) {
+    //       if (res.confirm) {
+    //         _this.fetchDeleteBuilding(item)
+    //         _this.roomList.splice(index, 1)
+    //         _this.$apply()
+    //       } else if (res.cancel) {
+    //         console.log('用户点击取消')
+    //       }
+    //     }
+    //   })
+    // },
+    gotoRoomDetail(buildingId) {
+      this.$parent.$navigate('./find_roomDetail', { buildingId})
+    },
+    gotoCompanyDetail(companyId) {
+      this.$parent.$navigate('./find_companyDetail', { companyId: companyId})
+    },
+
+  }
+  fetchData() {
+    const baseAssetsUrl = this.$parent.$parent.globalData.baseAssetsUrl
+    http.get('/user/vipList', this.params).success(res => {
+      if (this.params.vipType == 1) { //楼盘
+        this.agencies = []
+        this.buildings = res.data.map(v => {
+          v.banner = baseAssetsUrl + v.banners.split(',')[0]
+          return v
+        })
+      } else { //中介
+        this.agencies = res.data
+        this.buildings = []
+      }
+      this.$apply()
+    })
+
+  }
+  onLoad(params) {
+    http.get('/user/platformUsers').success(res => {
+      //{ name: '无维护人', id: 0 }, { name: 'aa', id: 1 }, { name: 'bb', id: 2 }
+      this.servicers = res.data
+      this.$apply()
+    })
+  }
+}
+
+</script>
+<style lang="less">
+.item-title {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.item-title text {
+  flex: 3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.item-title .servicer {
+  flex: 1;
+  text-align: right;
+  text-overflow: initial;
+}
+
+.servicer {
+  color: #007aff;
+  font-size: 26rpx;
+}
+
+.mg-cell {
+  display: block;
+}
+
+.actions {
+  text-align: right;
+  padding: 20rpx 30rpx 0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.roomList_vertical {
+  margin-top: 94px;
+  .item-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  background-color: #fff;
+  .roomView {
+    margin: 0 40rpx;
+    padding: 30rpx 0;
+    display: flex;
+    border-bottom: 1rpx solid #e5e5e5;
+    .roomImg {
+      width: 240rpx;
+      height: 180rpx;
+      border-radius: 8rpx;
+      flex: none;
+      border: 1rpx solid #f5f5f5;
+      box-sizing: border-box;
+    }
+    .roomInfo {
+      width: 410rpx;
+      min-height: 180rpx;
+      margin-left: 20rpx;
+      display: flex;
+      flex-flow: column;
+      justify-content: space-between;
+      view {
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      .icon-location {
+        flex: none;
+      }
+      .title {
+        font-size: 30rpx;
+        .quanicon {
+          width: 40rpx;
+          height: 28rpx;
+          margin-right: 12rpx;
+          background-image: url("https://assets.mgzf.com/appimg/a46a076103204e6599647db0e045c499.png");
+          background-size: cover;
+          flex: none;
+        }
+        .jjricon {
+          width: 25rpx;
+          height: 30rpx;
+          margin-right: 12rpx;
+          background-image: url('https://assets.mgzf.com/appimg/a9ba3eea122f6f4b8c8b4e88617ae442.png');
+          background-size: cover;
+          flex: none;
+        }
+      }
+      .bottom {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 10rpx;
+        .tags {
+          white-space: normal;
+        }
+        .amount {
+          white-space: nowrap;
+        }
+      }
+    }
+  }
+
+  .itemListView {
+    background-color: #ffffff;
+  }
+
+  .loadMore {
+    height: 100rpx;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text {
+      color: #999999;
+      font-size: 24rpx;
+      display: inline-block;
+      vertical-align: middle;
+      position: relative;
+      top: -4rpx
+    }
+    image {
+      height: 40rpx;
+      width: 40rpx;
+      margin-right: 10rpx;
+      display: inline-block;
+      vertical-align: middle;
+    }
+  }
+  .pageTip {
+    height: 300rpx;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    view {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    text {
+      color: #999999;
+      font-size: 24rpx;
+    }
+    image {
+      height: 100rpx;
+      width: 100rpx;
+      margin-bottom: 30rpx;
+      display: block;
+    }
+  }
+  .hide {
+    display: none;
+  }
+  .tags {
+    .label-type2 {
+      background-color: #f6e9fe;
+      color: #a323f2;
+    }
+    .label-type3 {
+      background-color: #e5f1ff;
+      color: #007aff;
+    }
+    .label-type4 {
+      background-color: #e7f5fe;
+      color: #189bfa;
+    }
+    .label-payment-monthly {
+      background-color: #ffeacc;
+      color: #ff7200;
+    }
+    .label-type-xyz {
+      background-color: #E3F8F4;
+      color: #21C4A8;
+    }
+  }
+}
+
+</style>

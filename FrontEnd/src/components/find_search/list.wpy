@@ -1,0 +1,115 @@
+<template>
+  <scroll-view
+    class="list-wrapper"
+    scroll-y
+    scroll-with-animation="true"
+    enable-back-to-top="true">
+    <repeat for="{{list}}" key="index" item="category">
+      <view class="categories">
+        <view class="category-title mg-font-small mg-lightgray">{{category.typeName}}</view>
+        <repeat for="{{category.children}}" key="index2" item="item" index="index2">
+          <view class="category-item" @tap="chooseResult({{item}})">
+            <block wx:if="{{item.type !== 'preferredBrand'}}">
+              <i class="icon-location"></i>
+              <view class="category-item-title">
+                <rich-text nodes="{{item.showName}}"></rich-text>
+              </view>
+              <text class="mg-font-small">{{item.roomCount}}套</text>
+            </block>
+            <block wx:else>
+              <image src="{{item.logoImage}}" class="category-image"></image>
+              <view class="category-item-title">
+                <rich-text class="mg-color-dark mg-font-mid" nodes="{{item.showName}}"></rich-text>
+                <Rate :score.sync="item.stars"></Rate>
+              </view>
+              <text class="mg-font-small">{{item.roomCount}}套</text>
+            </block>
+          </view>
+        </repeat>
+      </view>
+    </repeat>
+  </scroll-view>
+</template>
+
+<script>
+import wepy from "wepy"
+import Rate from '../Rate/rate'
+export default class MatchList extends wepy.component {
+  props = {
+    list: {
+      type: Array,
+      default: []
+    }
+  }
+  components = {
+    Rate
+  }
+  methods = {
+    chooseResult (item) {
+      this.$emit('searchResult', item);
+    }
+  }
+  getStars (score = 0) {
+    console.log(score)
+    return Number(score)
+  }
+  getStarClass (index, star) {
+    console.log(index, star)
+  }
+}
+</script>
+
+<style lang="less">
+  .list-wrapper{
+    background-color: white;
+  }
+  .category-title{
+    padding: 20rpx 40rpx;
+    border-bottom: 1rpx solid #e5e5e5;
+  }
+  .category-item{
+    padding: 32rpx 28rpx 32rpx 10rpx;
+    color: #4a4a4a;
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    border-bottom: 1rpx solid #e5e5e5;
+    margin-left: 40rpx;
+    &:nth-last-child(1) {
+      border-bottom: none;
+    }
+  }
+  .category-item-title{
+    flex: 1;
+    flex-grow: 1;
+    font-size: 28rpx;
+    margin-right: 20rpx;
+    .mg-font-mini {
+      margin-left: 6rpx;
+    }
+  }
+  .category-image {
+    width: 68rpx;
+    height: 68rpx;
+    margin-right: 20rpx;
+  }
+  .categories{
+    border-bottom: 1rpx solid #e5e5e5;
+    &:nth-last-child(1) {
+      border-bottom: none;
+    }
+  }
+  .star {
+    width: 20rpx;
+    height: 20rpx;
+    background-image: url(https://assets.mgzf.com/h5img/223a8e2dbb46311c8de99461445ba0bb.png);
+    display: inline-block;
+    line-height: 20rpx;
+    background-size: contain;
+    background-repeat: no-repeat;
+    margin-right:8rpx;
+  }
+  .star-active{
+    background-image: url(https://assets.mgzf.com/h5img/f13856608a4af654f4862f8d293c5879.png);
+  }
+</style>

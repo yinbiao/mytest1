@@ -1,0 +1,1067 @@
+<template>
+  <view class="container">
+    <view class="zan-panel-title">
+      <view class="zan-icon zan-icon-wap-home greenColor"></view>楼盘信息</view>
+    <view class="zan-panel">
+      <view class="zan-cell zan-field wrapped">
+        <view class="zan-cell__hd zan-field__title">名称
+          <text class='red'>*</text>
+        </view>
+        <!-- {{buildingItems.buildingName}} -->
+        <input type="text" placeholder="请输入楼盘名称" class="zan-field__input zan-cell__bd" placeholder-class="zan-field__placeholder" bindinput="tapBuildingItems('buildingName')" value="{{buildingItems.buildingName}}">
+      </view>
+      <view class="zan-cell zan-field wrapped">
+        <view class="zan-cell__hd zan-field__title">均价(元/㎡)
+          <text class='red'>*</text>
+        </view>
+        <input type="text" placeholder="请输入楼盘均价(元/㎡)" class="zan-field__input zan-cell__bd" placeholder-class="zan-field__placeholder" bindinput="tapBuildingItems('averagePrice')" value="{{buildingItems.averagePrice}}" />
+      </view>
+      <view class="zan-cell zan-field wrapped">
+        <view class="zan-cell__hd zan-field__title">最低总价(万元)
+          <text class='red'>*</text>
+        </view>
+        <input type="number" placeholder="请输入楼盘最低总价(万元)" class="zan-field__input zan-cell__bd" placeholder-class="zan-field__placeholder" bindinput="tapBuildingItems('minTotalPrice')" value="{{buildingItems.minTotalPrice}}" />
+      </view>
+      <view class="zan-cell zan-field wrapped">
+        <view class="zan-cell__hd zan-field__title">最高总价(万元)
+          <text class='red'>*</text>
+        </view>
+        <input type="number" placeholder="请输入楼盘最高总价(万元)" class="zan-field__input zan-cell__bd" placeholder-class="zan-field__placeholder" bindinput="tapBuildingItems('maxTotalPrice')" value="{{buildingItems.maxTotalPrice}}" />
+      </view>
+      <view class="zan-cell zan-field wrapped">
+        <view class="zan-cell__hd zan-field__title">首付比例（%）
+          <text class='red'>*</text>
+        </view>
+        <input type="number" placeholder="首付比例" class="zan-field__input zan-cell__bd" placeholder-class="zan-field__placeholder" bindinput="tapBuildingItems('paymentRatio')" value="{{buildingItems.paymentRatio}}" />
+      </view>
+      <!-- <picker bindchange="houseTypeChange" value="{{houseType}}" range-key="name" range="{{houseTypeList}}">
+        <view class="zan-cell zan-field wrapped">
+          <view class="zan-cell__hd zan-field__title">房型</view>
+          <view class="zan-field__input zan-cell__bd list_item_arrow">
+            {{houseType.name}}
+            <view class="icon-arrow-right"></view>
+          </view>
+        </view>
+      </picker> -->
+      <view class="zan-cell zan-field wrapped" @tap="toggleHouseTypePopup">
+        <view class="zan-cell__hd zan-field__title">房型
+          <text class='red'>*</text>
+        </view>
+        <view class="zan-field__input zan-cell__bd list_item_arrow">
+          {{houseType}}
+          <view class="icon-arrow-right"></view>
+        </view>
+      </view>
+      <view class="zan-dialog {{ showHouseTypePopup ? 'zan-dialog--show' : '' }}" style='position: relative;z-index: 999'>
+        <view class="zan-dialog--mask"></view>
+        <view class="zan-dialog--container">
+          <view class="zan-dialog__content zan-dialog__content--title my-dialog-content" style="max-height:300px;overflow:scroll;">
+            <checkbox-group bindchange="houseTypeChange">
+              <label class="checkbox" wx:for="{{houseTypeList}}">
+                <checkbox value="{{item.type}}" />{{item.name}}
+              </label>
+            </checkbox-group>
+          </view>
+          <view class="zan-dialog__footer zan-dialog__footer--horizon" style="border-top:1px solid #eee;">
+            <!-- <block>
+              <button class="zan-dialog__button zan-btn" @tap="cancelEdit">取消</button>
+            </block> -->
+            <block>
+              <button class="zan-dialog__button zan-btn my-green" @tap="toggleHouseTypePopup">确定</button>
+            </block>
+          </view>
+        </view>
+      </view>
+      <view class="zan-cell zan-field wrapped">
+        <view class="zan-cell__hd zan-field__title">面积(㎡)
+          <text class='red'>*</text>
+        </view>
+        <input type="text" placeholder="多种面积用空格隔开" class="zan-field__input zan-cell__bd" placeholder-class="zan-field__placeholder" bindinput="tapBuildingItems('roomSize')" value="{{buildingItems.roomSize}}" />
+      </view>
+      <view class="zan-cell zan-field wrapped">
+        <!-- 排序，部分总价和百分比 -->
+        <view class="zan-cell__hd zan-field__title">中介佣金
+          <text class='red'>*</text>
+        </view>
+        <input type="text" placeholder="请输入楼盘佣金额度或者比例" class="zan-field__input zan-cell__bd" placeholder-class="zan-field__placeholder" bindinput="tapBuildingItems('commision')" value="{{buildingItems.commision}}" />
+      </view>
+      <view class="zan-cell zan-field wrapped" wx:if="{{buildingItems.lockPlatformFee ==1}}">
+        <view class="zan-cell__hd zan-field__title">平台费用(元/单)</view>
+        <input type="number" placeholder="给平台的佣金" class="zan-field__input zan-cell__bd" placeholder-class="zan-field__placeholder" bindinput="tapBuildingItems('platformFee')" value="{{buildingItems.platformFee}}" />
+      </view>
+      <picker bindchange="brokerageSpeedChange" value="{{brokerageSpeed}}" range-key="name" range="{{brokerageSpeedList}}">
+        <view class="zan-cell zan-field wrapped">
+          <view class="zan-cell__hd zan-field__title">结佣速度
+            <text class='red'>*</text>
+          </view>
+          <view class="zan-field__input zan-cell__bd list_item_arrow">
+            {{brokerageSpeed.name}}
+            <view class="icon-arrow-right"></view>
+          </view>
+        </view>
+      </picker>
+      <view class="zan-cell zan-field wrapped">
+        <view class="zan-cell__hd zan-field__title">交房时间
+          <text class='red'>*</text>
+        </view>
+        <picker class="zan-field__input zan-cell__bd list_item_arrow" mode="date" value="{{date}}" bindchange="bindDateChange">
+          {{buildingItems.finishTime || '请选择交房时间'}}
+          <view class="icon-arrow-right"></view>
+        </picker>
+      </view>
+      <picker bindchange="saleTypeChange" value="{{saleType}}" range-key="name" range="{{saleTypeList}}">
+        <view class="zan-cell zan-field wrapped">
+          <view class="zan-cell__hd zan-field__title">售卖类型
+            <text class='red'>*</text>
+          </view>
+          <view class="zan-field__input zan-cell__bd list_item_arrow">
+            {{saleType.name}}
+            <view class="icon-arrow-right"></view>
+          </view>
+        </view>
+      </picker>
+      <picker bindchange="propertyTypeChange" value="{{propertyType}}" range-key="name" range="{{propertyTypeList}}">
+        <view class="zan-cell zan-field wrapped">
+          <view class="zan-cell__hd zan-field__title">物业类型
+            <text class='red'>*</text>
+          </view>
+          <view class="zan-field__input zan-cell__bd list_item_arrow">
+            {{propertyType.name}}
+            <view class="icon-arrow-right"></view>
+          </view>
+        </view>
+      </picker>
+      <view class="zan-cell zan-field wrapped">
+        <view class="zan-cell__hd zan-field__title">联系方式
+          <text class='red'>*</text>
+        </view>
+        <input type="text" placeholder="请输入楼盘联系方式" class="zan-field__input zan-cell__bd" placeholder-class="zan-field__placeholder" bindinput="tapBuildingItems('phoneNum')" value="{{buildingItems.phoneNum}}" />
+      </view>
+      <view class="zan-cell zan-field wrapped" @tap="tapChooseGeo">
+        <view class="zan-cell__hd zan-field__title">匹配区域
+          <text class='red'>*</text>
+        </view>
+        <view class="zan-field__input zan-cell__bd list_item_arrow">
+          {{buildingItems.choosedGeoNames}}
+          <view class="icon-arrow-right"></view>
+        </view>
+      </view>
+      <view class="zan-cell zan-field wrapped" @tap="gotoLocation">
+        <view class="zan-cell__hd zan-field__title">地图位置
+          <text class='red'>*</text>
+        </view>
+        <view class="zan-field__input zan-cell__bd list_item_arrow">{{buildingItems.address || '请选择详细地址'}}
+          <view class="icon-arrow-right"></view>
+        </view>
+      </view>
+      <!-- <view class="zan-panel-title"><view class="zan-icon zan-icon-location greenColor"></view>街道详细地址</view>
+    <view class="zan-panel">
+      <view class="zan-cell">
+        <view>
+          <textarea placeholder="请输入街道详细地址" bindinput="getStreet" value="{{buildingItems.street}}"></textarea>
+        </view>
+      </view>
+    </view> -->
+      <view class="zan-cell zan-field wrapped">
+        <view class="zan-cell__hd zan-field__title">轮播图
+          <text class='red'>*</text>
+        </view>
+        <view class="zan-field__input zan-cell__bd list_item_arrow" @tap="addBanners">添加轮播图
+          <view class="icon-arrow-right"></view>
+        </view>
+      </view>
+      <view class="zan-panel noMargin">
+        <view class="zan-cell imgsSize20">
+          <view>
+            <repeat for="{{buildingItems.localBanners}}">
+              <image src="{{buildingItems.localBanners[index]}}"></image>
+            </repeat>
+          </view>
+        </view>
+      </view>
+      <view class="zan-cell zan-field wrapped">
+        <view class="zan-cell__hd zan-field__title">主力户型图
+          <text class='red'>*</text>
+        </view>
+        <view class="zan-field__input zan-cell__bd list_item_arrow" @tap="addMainImages">添加主力户型图
+          <view class="icon-arrow-right"></view>
+        </view>
+      </view>
+      <view class="zan-panel noMargin">
+        <view class="zan-cell imgsSize20">
+          <view>
+            <repeat for="{{buildingItems.localMainImages}}">
+              <image src="{{item}}"></image>
+            </repeat>
+          </view>
+        </view>
+      </view>
+      <view class="zan-cell zan-field wrapped">
+        <view class="zan-cell__hd zan-field__title">楼盘讲堂
+          <text class='red'>*</text>
+        </view>
+        <view class="zan-field__input zan-cell__bd list_item_arrow" @tap="addMainVideos">添加楼盘讲堂视频
+          <view class="icon-arrow-right"></view>
+        </view>
+      </view>
+      <view class="zan-panel noMargin">
+        <view class="zan-cell imgsSize20">
+          <view>
+            <repeat for="{{buildingItems.localMainVideos}}">
+              <video src="{{buildingItems.localMainVideos[index]}}"></video>
+            </repeat>
+          </view>
+        </view>
+      </view>
+      <view class="zan-cell zan-field wrapped">
+        <view class="zan-cell__hd zan-field__title">楼盘资料
+          <text class='red'>*</text>
+        </view>
+        <view class="zan-field__input zan-cell__bd list_item_arrow" @tap="addInfoImages">添加楼盘资料图片
+          <view class="icon-arrow-right"></view>
+        </view>
+      </view>
+      <view class="zan-panel noMargin">
+        <view class="zan-cell imgsSize20">
+          <view>
+            <repeat for="{{buildingItems.localInfoImages}}">
+              <image src="{{item}}"></image>
+            </repeat>
+          </view>
+        </view>
+      </view>
+      <view class="zan-cell zan-field wrapped">
+        <view class="zan-cell__hd zan-field__title">发布合同
+          <text class='red'>*</text>
+        </view>
+        <view class="zan-field__input zan-cell__bd list_item_arrow" @tap="addCoporationImages">添加合作合同图片
+          <view class="icon-arrow-right"></view>
+        </view>
+      </view>
+      <view class="zan-panel noMargin">
+        <view class="zan-cell imgsSize20">
+          <view>
+            <repeat for="{{buildingItems.localCoporationImages}}">
+              <image src="{{item}}"></image>
+            </repeat>
+          </view>
+        </view>
+      </view>
+      <view class="zan-cell zan-field wrapped">
+        <view class="zan-cell__hd zan-field__title">发布五证
+          <text class='red'>*</text>
+        </view>
+        <view class="zan-field__input zan-cell__bd list_item_arrow" @tap="addCredentialsImages">添加五证图片
+          <view class="icon-arrow-right"></view>
+        </view>
+      </view>
+      <view class="zan-panel noMargin">
+        <view class="zan-cell imgsSize20">
+          <view>
+            <repeat for="{{buildingItems.localCredentialsImages}}">
+              <image src="{{item}}"></image>
+            </repeat>
+          </view>
+        </view>
+      </view>
+      <view class="zan-panel-title">
+        <view class="zan-icon zan-icon-clock greenColor"></view>楼盘介绍
+        <text class='red'>*</text>
+      </view>
+      <view class="zan-panel">
+        <view class="zan-cell">
+          <view>
+            <textarea placeholder="请输入楼盘介绍" bindinput="tapBuildingItems('introduce')" value="{{buildingItems.introduce}}"></textarea>
+          </view>
+        </view>
+      </view>
+      <!-- <view class="zan-panel-title"><view class="zan-icon zan-icon-shop greenColor"></view>平台规则</view>
+    <view class="zan-panel">
+      <view class="zan-cell">
+        <view>
+          <textarea placeholder="请输入平台规则"  bindinput="tapBuildingItems('cooperationRule')"></textarea>
+        </view>
+      </view>
+    </view> -->
+      <view class="zan-panel-title">
+        <view class="zan-icon zan-icon-send-gift greenColor"></view>周边信息
+        <text class='red'>*</text>
+      </view>
+      <view class="zan-panel">
+        <view class="zan-cell">
+          <view>
+            <textarea placeholder="请输入周边信息" bindinput="tapBuildingItems('surround')" value="{{buildingItems.surround}}"></textarea>
+          </view>
+        </view>
+      </view>
+      <view class="zan-panel-title">
+        <view class="zan-icon zan-icon-exchange-record greenColor"></view>交通信息
+        <text class='red'>*</text>
+      </view>
+      <view class="zan-panel">
+        <view class="zan-cell">
+          <view>
+            <textarea placeholder="请输入交通信息" bindinput="tapBuildingItems('traffic')" value="{{buildingItems.traffic}}"></textarea>
+          </view>
+        </view>
+      </view>
+      <view class="zan-panel-title">
+        <view class="zan-icon zan-icon-cash-back-record greenColor"></view>优惠政策
+        <text class='red'>*</text>
+      </view>
+      <view class="zan-panel">
+        <view class="zan-cell">
+          <view>
+            <textarea placeholder="请输入优惠政策" bindinput="tapBuildingItems('policy')" value="{{buildingItems.policy}}"></textarea>
+          </view>
+        </view>
+      </view>
+      <view class="zan-panel-title">
+        <view class="zan-icon zan-icon-other-pay greenColor"></view>招揽战略合作伙伴
+        <text class='red'>*</text>
+      </view>
+      <view class="zan-panel">
+        <view class="zan-cell">
+          <view>
+            <textarea placeholder="输入招揽战略合作伙伴简讯" bindinput="tapBuildingItems('partnerMsg')" value="{{buildingItems.partnerMsg}}"></textarea>
+          </view>
+        </view>
+      </view>
+      <view class="zan-panel-title">
+        <view class="zan-icon zan-icon-other-pay greenColor"></view>报备规则
+        <text class='red'>*</text>
+      </view>
+      <view class="zan-panel">
+        <view class="zan-cell">
+          <view>
+            <textarea placeholder="报备规则" bindinput="tapBuildingItems('ruleReport')" value="{{buildingItems.ruleReport}}"></textarea>
+          </view>
+        </view>
+      </view>
+      <view class="zan-panel-title">
+        <view class="zan-icon zan-icon-other-pay greenColor"></view>判客规则
+        <text class='red'>*</text>
+      </view>
+      <view class="zan-panel">
+        <view class="zan-cell">
+          <view>
+            <textarea placeholder="判客规则" bindinput="tapBuildingItems('ruleJudge')" value="{{buildingItems.ruleJudge}}"></textarea>
+          </view>
+        </view>
+      </view>
+      <view class="zan-panel-title">
+        <view class="zan-icon zan-icon-other-pay greenColor"></view>备注
+        <text class='red'>*</text>
+      </view>
+      <view class="zan-panel">
+        <view class="zan-cell">
+          <view>
+            <textarea placeholder="请输入备注" bindinput="tapBuildingItems('remark')" value="{{buildingItems.remark}}"></textarea>
+          </view>
+        </view>
+      </view>
+      <view class="zan-btns" @tap="buildingSubmit">
+        <button class="zan-btn zan-btn--primary">提交修改</button>
+      </view>
+    </view>
+    <view class="popup-example--bottom zan-popup zan-popup--bottom {{ showBottomPopup ? 'zan-popup--show' : ''}}">
+      <view class="zan-popup__mask" catchtap="toggleBottomPopup"></view>
+      <view class="zan-popup__container">
+        <ChooseGeo @choosedGeo.user="choosedGeo">
+          <!-- <view class="zan-btns">
+        <button class="zan-btn" catchtap="toggleBottomPopup">
+          关闭 popup
+        </button>
+      </view> -->
+      </view>
+    </view>
+  </view>
+</template>
+<script>
+import wepy from 'wepy'
+import util from '../utils/util.js'
+import http from '../utils/http.js'
+import ChooseGeo from '../components/chooseGeo'
+import C, { propertyTypeList, saleTypeList, brokerageSpeedList, houseTypeList } from '../constant/index.js'
+export default class EditBuilding extends wepy.page {
+  config = {
+    navigationBarTitleText: '编辑楼盘',
+    enablePullDownRefresh: true,
+    backgroundTextStyle: 'dark',
+    backgroundColor: '#ffffff'
+  }
+  components = {
+    ChooseGeo
+  }
+  data = {
+    showHouseTypePopup: false,
+    showBottomPopup: false,
+    date: new Date(),
+
+    saleTypeList,
+    saleType: {},
+
+    propertyTypeList,
+    propertyType: {},
+
+    brokerageSpeedList,
+    brokerageSpeed: {},
+
+    houseTypeList,
+    houseType: [],
+
+    showSaleTypeBottomPopup: false,
+    showPropertyTypeBottomPopup: false,
+    saleTypeName: '',
+    propertyTypeName: '',
+    buildingItems: {
+      buildingName: '', //楼盘名称
+      averagePrice: '', //均价
+      commision: '', //佣金
+      //minQuato: '', //每单成交定额
+      //award: '', //平台奖励（给中介）
+      finishTime: '', //交房时间
+      saleType: '', //售卖类型（1期房2现房3待售）
+      propertyType: '', //物业类型（1住宅2洋房3公寓4别墅5商铺6写字楼）
+
+      brokerageSpeed: '',
+      credentials: '',
+      paymentRatio: '',
+      roomSize: '',
+      maxRoomSize: '',
+      minRoomSize: '',
+      houseType: '',
+      partnerMsg: '',
+
+      phoneNum: '', //联系方式
+      geolocation: '', //地理位置
+      address: '',
+      province: '', //省
+      city: '', //市
+      district: '', //区
+      street: '', //街道详细信息
+      introduce: '', //楼盘介绍
+      cooperationRule: '', //平台规则
+      surround: '', //周边信息
+      traffic: '', //交通
+      policy: '', //优惠政策
+      remark: '', //备注
+      banners: [],
+      mainImages: [], //主力户型图
+      mainVideos: [], //楼盘讲堂
+      infoImages: [], //楼盘资料图片
+      coporationImages: [], //合作合同图片
+      //seenCoporationImages: [],
+      totalPrice: '',
+      ruleJudge: '',
+      ruleReport: '',
+      credentialsImages: [], //五证图片
+
+      localBanners: [],
+      localMainImages: [],
+      localMainVideos: [],
+      choosedGeoNames: [],
+
+      localInfoImages: [],
+      localCoporationImages: [],
+      //localSeenCoporationImages: [],
+      localCredentialsImages: [],
+      platformFee: ''
+    }
+  }
+
+  computed = {}
+
+  methods = {
+    toggleHouseTypePopup() {
+      this.showHouseTypePopup = !this.showHouseTypePopup
+    },
+    brokerageSpeedChange(e) {
+      this.brokerageSpeed = this.brokerageSpeedList[e.detail.value]
+      this.buildingItems.brokerageSpeed = this.brokerageSpeed.type
+    },
+    houseTypeChange(e) {
+      this.buildingItems.houseType = e.detail.value.toString()
+      this.houseType = e.detail.value.map(v => {
+        return C.houseType[v].name
+      }).join()
+
+    },
+    saleTypeChange(e) {
+      this.saleType = this.saleTypeList[e.detail.value]
+      this.buildingItems.saleType = this.saleType.type
+    },
+    propertyTypeChange(e) {
+      this.propertyType = this.propertyTypeList[e.detail.value]
+      this.buildingItems.propertyType = this.propertyType.type
+    },
+    choosedGeo(data) {
+      console.log('choosedGeo=> ', data)
+      const { province, city, district } = data
+      let b = this.buildingItems
+
+      b.choosedGeoNames = [province.shortName, city.shortName, district.shortName]
+      b.provinceId = province.id
+      b.provinceName = province.shortName
+      b.cityId = city.id
+      b.cityName = city.shortName
+      b.districtId = district.id
+      b.districtName = district.shortName
+
+      this.showBottomPopup = false
+    },
+
+    tapChooseGeo() {
+      this.showBottomPopup = true
+    },
+    buildingSubmit() {
+      // this.buildingItems.mainImages=this.buildingItems.mainImages.join()
+      // this.buildingItems.mainVideos=this.buildingItems.mainVideos.join()
+      console.log(this.buildingItems)
+      const _params = {
+        ...this.buildingItems,
+        mainImages: this.buildingItems.mainImages.join(),
+        mainVideos: this.buildingItems.mainVideos.join(),
+        banners: this.buildingItems.banners.join(),
+        infoImages: this.buildingItems.infoImages.join(),
+        coporationImages: this.buildingItems.coporationImages.join(),
+        credentialsImages: this.buildingItems.credentialsImages.join(),
+        //seenCoporationImages: this.buildingItems.seenCoporationImages.join() 
+      }
+
+      //校验数据 start
+      const validation = {
+        address: '地址必填',
+        averagePrice: '均价必填',
+        banners: '楼盘轮播图必填',
+        brokerageSpeed: '结佣速度必选',
+        buildingName: '楼盘名称必填',
+        // city: '城市必选',
+        commision: '楼盘佣金额度或者比例必填',
+        // cooperationRule: '合作规则必填',
+        // coporationImages: '合作图片必填',
+
+        credentialsImages: '五证图片必填',
+        // district: '区域必选',
+        finishTime: '交房时间必选',
+        geolocation: '地理位置必填',
+        houseType: '户型必填',
+        infoImages: '楼盘资料图片必选',
+        introduce: '楼盘介绍必填',
+        mainImages: '主力户型图必选',
+        mainVideos: '楼盘讲堂必选',
+
+        partnerMsg: '招聘合作伙伴信息必填',
+        paymentRatio: '首付比例必填',
+        phoneNum: '电话号码必填',
+        policy: '优惠政策必填',
+        propertyType: '物业类型必填',
+        // province: '省必选',
+        remark: '备注必填',
+        roomSize: '户型面积必填',
+        ruleJudge: '判客规则必填',
+        ruleReport: '报备规则必填',
+        saleType: '售卖类型必选',
+        // street: '街道详细地址必填',
+        surround: '周边信息必填',
+        // totalPrice: '总价必填',
+        traffic: '交通信息必填'
+      }
+
+
+      const isValid = Object.keys(validation).every(k => {
+        if (_params[k] == undefined || _params[k] == '') {
+          wx.showModal({
+            title: '提示',
+            content: validation[k]
+          })
+          return false
+        } else {
+          return true
+        }
+      })
+      if (!isValid) { return }
+      //校验数据 end
+
+      const _this = this
+      http.post('/building', _params).success((res) => { //后面修改成先查询，然后再提交，
+        // console.log('/building success :', res)
+        if (res.data) {
+          wx.showModal({
+            title: '提示',
+            content: '发布楼盘成功',
+            cancelText: '重新编辑',
+            confirmText: '查看结果',
+            success: function(_res) {
+              if (_res.confirm) {
+                console.log('查看我发布的楼盘')
+                //去楼盘详情页
+                _this.$navigate('./find_roomDetail', { buildingId: res.data })
+
+              } else if (_res.cancel) {
+                console.log('重新编辑')
+                //清空当前表单
+              }
+            }
+          })
+        }
+        //          this.$navigate('./find_buildingList')
+      })
+    },
+    toggleSaleTypePopup(item) {
+      console.log(item)
+      this.saleTypeName = item.name
+      this.buildingItems.saleType = item.type
+      this.showSaleTypeBottomPopup = false
+    },
+    togglePropertyPopup(item) {
+      console.log(item)
+      this.propertyTypeName = item.name
+      this.buildingItems.propertyType = item.type
+      this.showPropertyTypeBottomPopup = false
+    },
+
+    tapBuildingItems(key, event) {
+      //console.log('arguments=>',arguments)
+      this.buildingItems[key] = event.detail.value
+      if (key == 'roomSize') {
+        let roomSizes = this.buildingItems[key].split(/\s+/g).map(v => {
+          return parseInt(v.replace(/\D/g, '')) || 0
+        }).sort((a, b) => { return a > b })
+
+        this.buildingItems['minRoomSize'] = roomSizes[0]
+        this.buildingItems['maxRoomSize'] = roomSizes.pop()
+      }
+    },
+    bindDateChange(e) {
+      console.log('picker发送选择改变，携带值为', e.detail.value)
+      this.buildingItems.finishTime = e.detail.value
+    },
+    toggleSaleTypeBottomPopup() {
+      this.showSaleTypeBottomPopup = !this.data.showSaleTypeBottomPopup;
+    },
+    toggleHouseTypeBottomPopup() {
+      this.showPropertyTypeBottomPopup = !this.data.showPropertyTypeBottomPopup;
+    },
+    addInfoImages() {
+      const _ = this;
+      util.chooseImagesAndUpload({
+        success(res, data) {
+          // console.log(res,data.path)
+          _.buildingItems.localInfoImages = data.path
+          _.$apply()
+
+          _.buildingItems.infoImages.push(res.data)
+        }
+      })
+    },
+    addCoporationImages() {
+      const _ = this;
+      util.chooseImagesAndUpload({
+        success(res, data) {
+          // console.log(res,data.path)
+          _.buildingItems.localCoporationImages = data.path
+          _.$apply()
+
+          _.buildingItems.coporationImages.push(res.data)
+        }
+      })
+    },
+    addCredentialsImages() {
+      const _ = this;
+      util.chooseImagesAndUpload({
+        success(res, data) {
+          // console.log(res,data.path)
+          _.buildingItems.localCredentialsImages = data.path
+          _.$apply()
+          _.buildingItems.credentialsImages.push(res.data)
+        }
+      })
+    },
+
+    // addSeenCoporationImages() {
+    //   const _ = this;
+    //   util.chooseImagesAndUpload({
+    //     success(res, data) {
+    //       // console.log(res,data.path)
+    //       _.buildingItems.localSeenCoporationImages = data.path
+    //       _.$apply()
+
+    //       _.buildingItems.seenCoporationImages.push(res.data)
+    //     }
+    //   })
+    // },
+    addMainImages() {
+      const _ = this;
+      util.chooseImagesAndUpload({
+        success(res, data) {
+          // console.log(res,data.path)
+          _.buildingItems.localMainImages = data.path
+          _.$apply()
+
+          _.buildingItems.mainImages.push(res.data)
+        }
+      })
+    },
+    addMainVideos() {
+      const _ = this;
+      util.chooseVideoAndUpload({
+        success(res, data) {
+          // console.log(res,data.path)
+          _.buildingItems.localMainVideos = data.path
+          _.$apply()
+
+          _.buildingItems.mainVideos.push(res.data)
+        }
+      })
+
+    },
+    addBanners() {
+      const _ = this;
+      util.chooseImagesAndUpload({
+        success(res, data) {
+          // console.log(res,data.path)
+          _.buildingItems.localBanners = data.path
+          _.$apply()
+
+          _.buildingItems.banners.push(res.data)
+        }
+      })
+
+    },
+    gotoLocation() {
+      // let point = util.BdmapEncryptToMapabc(39.915119, 116.403963)
+      // wx.openLocation({
+      //   latitude: point.lat,
+      //   longitude: point.lng,
+      //   name: '天安门',
+      //   scale: 28
+      // })
+      const _this = this
+      wx.authorize({
+        scope: 'scope.userLocation',
+        success() {
+          wx.chooseLocation({
+            success: function(res) {
+              const { name, address, latitude, longitude } = res
+              if (name) {
+                _this.buildingItems.buildingName = name
+              }
+              _this.buildingItems.address = address
+              _this.buildingItems.geolocation = longitude + '-' + latitude
+              console.log(res)
+            },
+            fail: function(res) {
+              console.log('获取位置失败', res)
+            }
+          })
+        }
+      })
+
+
+    }
+
+  }
+
+  onLoad(params) {
+    const { buildingId } = params
+    const _this = this
+    http.get('/building', { id: buildingId }).success(res => {
+      const m=_this.buildingItems = res.data[0]
+
+        _this.houseType=m.houseType.split(',').map(v=>{ return C.houseType[v].name});
+
+        _this.brokerageSpeed = _this.brokerageSpeedList[m.brokerageSpeed]
+
+        _this.saleType = _this.saleTypeList[m.saleType]
+
+        _this.propertyType = _this.propertyTypeList[m.propertyType]
+
+        m.banners=m.banners.split(',');
+        _this.buildingItems.localBanners =m.banners.map(v=>{ return _this.$parent.globalData.baseAssetsUrl+v})
+        m.mainImages=m.mainImages.split(',')
+        _this.buildingItems.localMainImages =m.mainImages.map(v=>{ return _this.$parent.globalData.baseAssetsUrl+v})
+        m.infoImages=m.infoImages.split(',')
+        _this.buildingItems.localInfoImages =m.infoImages.map(v=>{ return _this.$parent.globalData.baseAssetsUrl+v})
+        m.mainVideos=m.mainVideos.split(',')
+        _this.buildingItems.localMainVideos =m.mainVideos.map(v=>{ return _this.$parent.globalData.baseAssetsUrl+v})
+        m.coporationImages=m.coporationImages.split(',')
+        _this.buildingItems.localCoporationImages =m.coporationImages.map(v=>{ return _this.$parent.globalData.baseAssetsUrl+v})
+        m.credentialsImages=m.credentialsImages.split(',')
+        _this.buildingItems.localCredentialsImages =m.credentialsImages.map(v=>{ return _this.$parent.globalData.baseAssetsUrl+v})
+
+        _this.buildingItems.choosedGeoNames =m.cityName + ' '+ m.districtName
+        
+      this.$apply()
+    })
+  }
+
+  onPullDownRefresh() {
+    console.log('onPullDownRefresh')
+    wx.stopPullDownRefresh()
+  }
+}
+
+</script>
+<style lang="less">
+.popup-example--bottom .zan-popup__container {
+  left: 0;
+  right: 0;
+}
+
+.imgsSize20 {
+  &>view {
+    width: 100%
+  }
+  image {
+    width: 20%;
+    height: 100px;
+  }
+  video {
+    width: 20%;
+    height: 100px;
+  }
+}
+
+.zan-cell {
+  min-height: 20px;
+}
+
+.noMargin {
+  margin: 0;
+}
+
+.zan-panel-title .greenColor {
+  color: #279f26!important;
+}
+
+.zan-panel-title .zan-icon {
+  margin-right: 16rpx;
+}
+
+.zan-panel textarea {
+  height: 100rpx;
+}
+
+.bottom-btn {
+  text-align: center;
+  margin-top: 100rpx;
+  button {
+    margin-top: 50rpx;
+  }
+}
+
+._sex {
+  margin-right: 20rpx;
+}
+
+.popup-example--bottom .zan-btns {
+  margin: 0px;
+}
+
+.zan-cell {
+  position: relative;
+  padding: 12px 15px;
+  display: flex;
+  align-items: center;
+  line-height: 1.4;
+  font-size: 14px
+}
+
+.zan-cell::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 200%;
+  transform: scale(.5);
+  transform-origin: 0 0;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 0 solid #e5e5e5;
+  border-bottom-width: 1px;
+  left: 15px;
+  right: 0
+}
+
+.zan-cell__icon {
+  margin-right: 5px
+}
+
+.zan-cell__bd {
+  flex: 1
+}
+
+.zan-cell__text {
+  line-height: 24px;
+  font-size: 14px
+}
+
+.zan-cell__desc {
+  line-height: 1.2;
+  font-size: 12px;
+  color: #666
+}
+
+.zan-cell__ft {
+  position: relative;
+  text-align: right;
+  color: #666
+}
+
+.zan-cell__no-pading {
+  padding: 0
+}
+
+.zan-cell__no-pading .zan-cell__bd_padding {
+  padding: 12px 0 12px 15px
+}
+
+.zan-cell__no-pading .zan-cell__bd_padding .zan-form__input {
+  height: 26px
+}
+
+.zan-cell__no-pading .zan-cell__ft_padding {
+  padding: 12px 15px 12px 0
+}
+
+.zan-cell--last-child::after,
+.zan-cell:last-child::after {
+  display: none
+}
+
+.zan-cell--access .zan-cell__ft {
+  padding-right: 13px
+}
+
+.zan-cell--access .zan-cell__ft::after {
+  position: absolute;
+  top: 50%;
+  right: 2px;
+  content: " ";
+  display: inline-block;
+  height: 6px;
+  width: 6px;
+  border-width: 2px 2px 0 0;
+  border-color: #c8c8c8;
+  border-style: solid;
+  transform: translateY(-50%) matrix(.71, .71, -.71, .71, 0, 0)
+}
+
+.zan-cell--switch {
+  padding-top: 6px;
+  padding-bottom: 6px
+}
+
+.zan-field {
+  padding: 7px 15px;
+  color: #333
+}
+
+.zan-field--wrapped {
+  margin: 0 15px;
+  background-color: #fff
+}
+
+.zan-field--wrapped::after {
+  left: 0;
+  border-width: 1px;
+  border-radius: 4px
+}
+
+.zan-field.zan-field--wrapped::after {
+  display: block
+}
+
+.zan-field--wrapped+.zan-field--wrapped {
+  margin-top: 10px
+}
+
+.zan-field--error {
+  color: #f40
+}
+
+.zan-field--wrapped.zan-field--error::after {
+  border-color: #f40
+}
+
+.zan-field__title {
+  color: #333;
+  min-width: 65px;
+  padding-right: 10px
+}
+
+.zan-field__input {
+  flex: 1;
+  line-height: 1.6;
+  padding: 4px 0;
+  min-height: 22px;
+  height: auto;
+  font-size: 14px
+}
+
+.zan-field__placeholder {
+  font-size: 14px
+}
+
+.zan-field__input--right {
+  text-align: right
+}
+
+.zan-stepper {
+  color: #666
+}
+
+.zan-stepper view {
+  display: inline-block;
+  line-height: 20px;
+  padding: 5px 0;
+  text-align: center;
+  min-width: 40px;
+  box-sizing: border-box;
+  vertical-align: middle;
+  font-size: 12px;
+  border: 1rpx solid #999
+}
+
+.zan-stepper .zan-stepper__minus {
+  border-right: none;
+  border-radius: 2px 0 0 2px
+}
+
+.zan-stepper .zan-stepper__text {
+  border: 1rpx solid #999;
+  display: inline-block;
+  text-align: center;
+  vertical-align: middle;
+  height: 30px;
+  width: 40px;
+  min-height: auto;
+  font-size: 12px;
+  line-height: 30px
+}
+
+.zan-stepper .zan-stepper__plus {
+  border-left: none;
+  border-radius: 0 2px 2px 0
+}
+
+.zan-stepper .zan-stepper--disabled {
+  background: #f8f8f8;
+  color: #bbb;
+  border-color: #e8e8e8
+}
+
+.zan-stepper--small view {
+  min-width: 36px;
+  line-height: 18px
+}
+
+.zan-stepper--small .zan-stepper__text {
+  width: 36px;
+  line-height: 28px;
+  height: 28px
+}
+
+</style>

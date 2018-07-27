@@ -1,0 +1,253 @@
+<template>
+  <view class="container">
+    <view class="search-box">
+      <view class="input-wrapper">
+        <icon type="search" size="14" />
+        <input
+          placeholder="请输入楼盘"
+          focus="true"
+          confirm-type="search"
+          maxlength="20"
+          @input="input"
+          @confirm="confirm" />
+      </view>
+    </view>
+    <view class="content">
+      <Loading :visible.sync="typing">
+        <text slot="content">搜索中...</text>
+      </Loading>
+     <!--  <HotAreas hidden="{{typing || input.length > 0}}" :areas.sync="areas"></HotAreas>
+ -->     <!--  <History hidden="{{typing || input.length > 0}}" :history.sync="history"></History> -->
+      <MatchList :list.sync="categories"></MatchList>
+      <view class="noDataTip" hidden="{{typing || input.length === 0 || (categories && categories.length > 0)}}">没有找到与"<text>{{input}}</text>"相关的结果</view>
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  //import SearchModel from '../models/model_search'
+  import HotAreas from '../components/find_search/hot_areas'
+  import History from '../components/find_search/history'
+  import Loading from '../components/Loading/loading'
+  import MatchList from '../components/find_search/list'
+  export default class FindSearch extends wepy.page {
+    config = {
+      navigationBarTitleText: '搜索楼盘，需求'
+    }
+
+    components = {
+      HotAreas,
+      History,
+      MatchList,
+      Loading
+    }
+
+    data = {
+      history: [],
+      searchModel: {},//new SearchModel(),
+      input: '',
+      typing: false,
+      areas: [],
+      list: [],
+      categories: [],
+      timeId: 0
+    }
+
+    computed = {
+      currentCity () {
+        return this.$parent.globalData.choosedCity
+      }
+    }
+    methods = {
+      input (e) {
+        let {value} = e.detail
+        this.input = value
+        this.typing = true
+        clearTimeout(this.timeId)
+        this.timeId = setTimeout(() => {
+          this.match(value)
+        }, 500)
+        this.$apply()
+      },
+      confirm (e) {
+        let {value} = e.detail;
+        this.$emit('searchResult', {
+          name: value,
+          type: 'searchWord'
+        });
+      }
+    }
+    events = {
+      searchResult (item, historyIndex) {
+        switch (item.type) {
+          case 'preferredBrand':
+            this.$root.$navigate('./apartment_main', {brandId: item.paraValue});
+            break;
+          default :
+            this.$root.$navigate('./find_roomFilter', {value: JSON.stringify({
+              searchWord: (item.name && item.name.split(',')[0]) || ''
+            })});
+            break;
+        }
+        wx.getStorage({
+          key: 'SEARCH_HISTORY',
+          complete: (res) => {
+            let data = (res.data && JSON.parse(res.data)) || [];
+            if (typeof historyIndex === 'number') {
+              data.splice(historyIndex, 1);
+            }
+            if (data.length > 9) {
+              data = data.slice(0, 9);
+            }
+            data.unshift(item)
+            wx.setStorage({
+              key: "SEARCH_HISTORY",
+              data: JSON.stringify(data)
+            })
+          }
+        })
+      }
+    };
+
+    listAdapter (list) {
+      var categories = []
+      list.forEach(i => {
+        if (i.type === "preferredBrand") {
+          // 品牌公寓星级
+          let starsCount = Number(i.starLv || 0)
+          i.stars = new Array(5).fill(starsCount)
+          // logo图片地址
+          if (!(i.logoImage.match(/^http/))) {
+            i.logoImage = 'http://image.mogoroom.com/' + i.logoImage;
+          }
+        }
+        i.showName = this.replaceKeyword(this.input, i.name)
+        var category = categories.find(c => {
+          return c.type === i.type
+        })
+        if (category) {
+          category.children.push(i)
+        } else {
+          categories.push(
+            {
+              type: i.type,
+              typeName: i.typeName,
+              children: [i]
+            }
+          )
+        }
+      })
+      return categories
+    }
+
+    replaceKeyword (key, content) {
+      let contentArray = content.split(',')
+      contentArray = contentArray.map((stringText, index) => {
+        if (index === 0) {
+          let newHighLight = `<span class="mg-color-orange">${key}</span>`
+          return stringText.replace(new RegExp(key, "g"), newHighLight)
+        } else {
+          return `<span class="mg-font-mini">${stringText}</span>`
+        }
+      })
+      return contentArray.join('')
+    }
+    onShow () {
+      let cache = wx.getStorageSync('SEARCH_HISTORY')
+      if (cache) {
+        cache = JSON.parse(cache)
+        if (Array.isArray(cache)) {
+          cache = cache.map(item => {
+            let contentArray = item.name.split(',')
+            contentArray = contentArray.map((stringText, index) => {
+              if (index === 0) {
+                return stringText
+              } else {
+                return `<span class="mg-font-mini">${stringText}</span>`
+              }
+            })
+            item.showName = contentArray.join('')
+            return item
+          })
+          this.history = cache
+          this.$apply();
+        }
+      }
+    }
+    onLoad() {
+      //console.log(this.currentCity)
+      this.cityId = this.currentCity.cityId
+      this.searchModel.cityId = this.cityId
+      this.getHotBusinessArea(this.cityId)
+    }
+    onPullDownRefresh(){
+    console.log('onPullDownRefresh')
+    wx.stopPullDownRefresh()
+  }
+  }
+</script>
+
+<style lang="less">
+  .container{
+    height: 100%;
+    background-color: white;
+  }
+  .search-box {
+    padding: 20rpx 30rpx;
+    background-color: #f9f9f9;
+
+    input {
+      height: 60rpx;
+      margin-left: 22rpx;
+      flex-grow: 1;
+      flex: 1;
+    }
+    .input-wrapper {
+      display: flex;
+      flex-flow: row nowrap;
+      background-color: #e8e8e9;
+      align-items: center;
+      padding-left: 22rpx;
+      border-radius: 4rpx;
+    }
+  }
+  .content {
+    background-color: white;
+    .noDataTip {
+      color: #9b9b9b;
+      font-size: 28rpx;
+      padding: 30rpx;
+    }
+  }
+
+  .icon-loading {
+    background-image: url(https://assets.mgzf.com/h5img/b349409b2ae83a3e1495d5fdffca3a25.png);
+    background-repeat: no-repeat;
+    background-size: contain;
+    width: 38rpx;
+    height: 38rpx;
+    display: inline-block;
+    vertical-align: text-bottom;
+    margin-right: 26rpx;
+    animation: spin 1s infinite;
+    -webkit-animation:spin 1s linear infinite;
+  }
+  @keyframes spin {
+    0% {
+      transform: rotate(0);
+    }
+    25% {
+      transform: rotate(90deg)
+    }
+    50% {
+      transform: rotate(180deg)
+    }
+    75% {
+      transform: rotate(270deg)
+    }
+    100% {
+      transform: rotate(360deg)
+    }
+  }
+</style>

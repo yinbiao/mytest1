@@ -1,0 +1,937 @@
+<template>
+  <view style="background:#f4f4f4;padding-bottom:12px;">
+    <!-- <view class="zan-panel">
+      <view class="zan-cell">
+        <view class="zan-cell__bd">
+          <view class="zan-steps zan-steps--{{ type == 'vertical' ? 'vsteps' : 'steps' }} zan-steps--{{ steps.length }}">
+            <view wx:for="{{ steps }}" wx:for-item="step" wx:key="unique" wx:for-index="index" class="zan-steps__step {{ hasDesc ? 'zan-steps__step--db-title' : '' }} {{ index == 0 ? 'zan-steps__step--first-child' : '' }} {{ index == steps.length - 1 ? 'zan-steps__step--last-child' : '' }} {{ step.done ? 'zan-steps__step--done' : '' }} {{ step.current ? 'zan-steps__step--cur' : '' }}">
+              <view class="zan-steps__title">{{ step.text }}</view>
+              <view class="zan-steps__icons">
+                <view class="zan-steps__circle"></view>
+              </view>
+              <view class="zan-steps__line"></view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view> -->
+    <!-- 订单编号  -->
+    <view>
+      <view class="zan-panel-title" style='display:flex;justify-content:space-between;'>
+        订单概要
+        <view class="zan-cell__ft">{{o.order.timestamp}}</view>
+      </view>
+      <view class="zan-panel">
+        <view class="zan-card">
+          <view class="zan-card__thumb" style="width:50px;height:50px;border-radius:50px;">
+            <!-- avatarUrl -->
+            <image class="zan-card__img" src="{{o.order.fromAvatarUrl}}"></image>
+          </view>
+          <view class="zan-card__detail" style="margin-left:60px;">
+            <view class="zan-card__detail-row">
+              <view class="zan-card__right-col">
+                <view class="zan-icon zan-icon-phone zan-c-green" style="margin-right:10rpx;display:inline-block;"></view>
+                <view class="zan-c-green zan-font-16" style="display:inline-block;" @tap="callPhone({{o.order.fromPhoneNum}})">拨打{{o.order.fromPhoneNum}}</view>
+              </view>
+              <view class="zan-card__left-col zan-ellipsis--l2 zan-font-16">
+                {{o.order.fromUserName}}
+              </view>
+            </view>
+            <view class="zan-card__detail-row zan-c-gray-darker">
+              <view class="zan-card__left-col zan-c-grayer">
+                {{o.order.fromCompanyName}}
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view class="zan-panel">
+        <view class="zan-card">
+          <view class="zan-card__thumb" style="width:50px;height:50px;border-radius:50px;">
+            <!-- avatarUrl -->
+            <image class="zan-card__img" src="{{o.order.toAvatarUrl}}"></image>
+          </view>
+          <view class="zan-card__detail" style="margin-left:60px;">
+            <view class="zan-card__detail-row">
+              <view class="zan-card__right-col">
+                <view class="zan-icon zan-icon-phone zan-c-green" style="margin-right:10rpx;display:inline-block;"></view>
+                <view class="zan-c-green zan-font-16" style="display:inline-block;" @tap="callPhone({{o.order.toPhoneNum}})">拨打{{o.order.toPhoneNum}}</view>
+              </view>
+              <view class="zan-card__left-col zan-ellipsis--l2 zan-font-16">
+                {{o.order.toUserName}}
+              </view>
+            </view>
+            <view class="zan-card__detail-row zan-c-gray-darker">
+              <view class="zan-card__left-col zan-c-grayer">
+                {{o.order.toCompanyName}}
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+  <view wx:if="{{o.report.id}}">
+    <view class="zan-panel-title">报备客户信息</view>
+    <view class="zan-panel">
+      <view class="zan-cell">
+        <view class="zan-icon zan-icon-contact" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">{{o.report.customerName}}</view>
+        <view class="zan-cell__ft">{{o.report.customerGender==1?'男':o.report.customerGender==2?'女':''}}</view>
+      </view>
+      <view class="zan-cell">
+        <view class="zan-icon zan-icon-clock" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">看房时间 </view>
+        <view class="zan-cell__ft">{{o.report.showTime}}</view>
+      </view>
+      <view class="zan-cell">
+        <view class="zan-icon zan-icon-member-day-privilege" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">看房人数 </view>
+        <view class="zan-cell__ft">{{o.report.peopleCount}}</view>
+      </view>
+      <view class="zan-cell" wx:if="{{o.report.busAddress}}">
+        <view class="zan-icon zan-icon-logistics" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">接送地址</view>
+        <view class="zan-cell__ft">{{o.report.busAddress}}</view>
+      </view>
+      <view class="zan-cell" wx:if="{{o.report.busTime}}">
+        <view class="zan-icon zan-icon-pending-deliver" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">出发时间</view>
+        <view class="zan-cell__ft">{{o.report.busTime}}</view>
+      </view>
+      <view class="zan-cell" wx:if="{{o.report.carNumber}}">
+        <view class="zan-icon zan-icon-edit-data" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">自驾车牌号</view>
+        <view class="zan-cell__ft">{{o.report.carNumber}}</view>
+      </view>
+      <view class="zan-cell">
+        <view class="zan-icon zan-icon-pending-orders" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">备注</view>
+        <view>{{o.report.remarks}}</view>
+      </view>
+    </view>
+    <!-- <view class="zan-cell">
+        <view class="zan-icon zan-icon-phone" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd"> {{report.nickName}}</view>
+        <view class="zan-cell__ft" @tap="">{{report.phoneNum}}</view>
+      </view>
+      <view class="zan-cell">
+        <view class="zan-icon zan-icon-phone" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">公司</view>
+        <view class="zan-cell__ft">{{report.companyName}}</view>
+      </view> -->
+  </view>
+  <!-- 订单编号 订单发起时间 看房时间 看房人数 自驾 班车 出发时间 备注 remarks -->
+  <view class="zan-panel" wx:if="{{o.demand.id}}">
+    <view class="zan-panel-title">客户信息</view>
+    <view class="zan-panel">
+      <view class="zan-cell">
+        <view class="zan-icon zan-icon-contact" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">发布人 </view>
+        <view class="zan-cell__ft">{{o.demand.nickName}}</view>
+      </view>
+      <view class="zan-cell">
+        <view class="zan-icon zan-icon-phone" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">发布人电话 </view>
+        <view class="zan-cell__ft">{{o.demand.phoneNum}}</view>
+      </view>
+      <view class="zan-cell">
+        <view class="zan-icon zan-icon-points-mall" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">公司 </view>
+        <view class="zan-cell__ft">{{o.demand.companyName}}</view>
+      </view>
+      <view class="zan-cell">
+        <view class="zan-icon zan-icon-contact" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">{{o.demand.customerName}}</view>
+        <view class="zan-cell__ft">{{o.demand.gender==1?'男':'女'}}</view>
+      </view>
+      <view class="zan-cell">
+        <view class="zan-icon zan-icon-question" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">新房/二手房</view>
+        <view class="zan-cell__ft">{{o.demand.handsTypeName}}</view>
+      </view>
+      <view class="zan-cell">
+        <view class="zan-icon zan-icon-location" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">目标区域</view>
+        <view class="zan-cell__ft">{{o.demand.cityName}} {{o.demand.districtNames}}</view>
+      </view>
+      <view class="zan-cell">
+        <view class="zan-icon zan-icon-upgrade" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">定向楼盘</view>
+        <view class="zan-cell__ft">{{o.demand.buildingNames}}</view>
+      </view>
+      <view class="zan-cell">
+        <view class="zan-icon zan-icon-logistics" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">地铁线</view>
+        <view class="zan-cell__ft" wx:if="{{demand.subways}}">{{o.demand.subways}}号线</view>
+      </view>
+      <view class="zan-cell">
+        <view class="zan-icon zan-icon-records" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">户型</view>
+        <view class="zan-cell__ft">{{o.demand.houseTypeName}}房</view>
+      </view>
+      <view class="zan-cell">
+        <view class="zan-icon zan-icon-description" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">物业类型</view>
+        <view class="zan-cell__ft">{{o.demand.propertyTypeName}}</view>
+      </view>
+      <view class="zan-cell">
+        <view class="zan-icon zan-icon-cash-back-record" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">预算</view>
+        <view class="zan-cell__ft">{{o.demand.budgetMin}}~{{o.demand.budgetMax}}万</view>
+      </view>
+      <view class="zan-cell">
+        <view class="zan-icon zan-icon-member-day-privilege" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">紧急程度</view>
+        <view class="zan-cell__ft">{{o.demand.degreeTypeName}}</view>
+      </view>
+      <view class="zan-cell">
+        <view class="zan-icon zan-icon-day-clock" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">预约看房时间</view>
+        <view class="zan-cell__ft">{{o.demand.appointment}}</view>
+      </view>
+      <view class="zan-cell">
+        <view class="zan-icon zan-icon-day-edit" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">备注</view>
+        <view class="zan-cell__ft">{{o.demand.remarks}}</view>
+      </view>
+    </view>
+  </view>
+  <view wx:if="{{o.building.id}}">
+    <view class="zan-panel-title">楼盘顾问</view>
+    <view class="zan-panel">
+      <view class="zan-card">
+        <view class="zan-card__thumb" style="width:50px;height:50px;border-radius:50px;">
+          <!-- avatarUrl -->
+          <image class="zan-card__img" src="{{o.building.avatarUrl}}"></image>
+        </view>
+        <view class="zan-card__detail" style="margin-left:60px;">
+          <view class="zan-card__detail-row">
+            <view class="zan-card__right-col">
+              <view class="zan-icon zan-icon-phone zan-c-green" style="margin-right:10rpx;display:inline-block;"></view>
+              <view class="zan-c-green zan-font-16" style="display:inline-block;" @tap="callPhone({{o.building.phoneNum}})">拨打{{o.building.phoneNum}}</view>
+            </view>
+            <view class="zan-card__left-col zan-ellipsis--l2 zan-font-16">
+              {{o.building.nickName}}
+            </view>
+          </view>
+          <view class="zan-card__detail-row zan-c-gray-darker">
+            <view class="zan-card__left-col zan-c-grayer">
+              {{o.building.companyName}}
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+    <view class="zan-panel-title">楼盘信息</view>
+    <view class="zan-panel">
+      <view class="zan-cell zan-cell--access" @tap="pushToBuildingDetail">
+        <view class="zan-icon zan-icon-records zan-c-grayer" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">所属楼盘</view>
+        <view class="zan-cell__ft">{{o.building.buildingName}}</view>
+      </view>
+      <!-- <view class="zan-cell">
+          <view class="zan-icon zan-icon-exchange-record zan-c-grayer" style="margin-right:10rpx;"></view>
+          <view class="zan-cell__bd">合作时间</view>
+          <view class="zan-cell__ft">2018-08-08 ～ 2019-01-01</view>
+        </view> -->
+      <view class="zan-cell">
+        <view class="zan-icon zan-icon-debit-pay zan-c-grayer" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">佣金计划</view>
+        <view class="zan-cell__ft">
+          <view class="zan-cell zan-cell--last-child" style="padding:0;">
+            <view class="zan-capsule zan-capsule--danger">
+              <block>
+                <view class="zan-capsule__left">
+                  <view class="zan-icon zan-icon-debit-pay zan-c-grayer"></view>
+                </view>
+                <view class="zan-capsule__right">{{o.building.commision}}</view>
+              </block>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+  <view class="zan-panel">
+    <view>
+      <view class="zan-cell">
+        <view class="zan-cell__bd">
+          <!-- <view class="zan-steps zan-steps--vsteps zan-steps--3 zan-steps__step--done zan-steps__step--first-child zan-steps__step--last-child zan-steps__step--cur"> -->
+          <view class='steps'>
+            <repeat for="{{o.orderStates}}" key="index" index="index" item="item">
+              <view class="zan-steps zan-steps--vsteps {{item.done?'zan-steps__step--done':''}} {{index==0?'zan-steps__step--first-child':''}} {{index==o.orderStates.length-1?'zan-steps__step--last-child':''}} {{item.current?'zan-steps__step--cur':''}}">
+                <view class="zan-steps__title" style='display: flex;justify-content:space-between;'>
+                  <view>{{index}}.
+                  <button wx:if="{{item.current}}" class='zan-btn zan-btn--primary zan-btn--small' @tap="tapNextFlowBtn({{item}},{{index}})">{{item.name}}</button>
+                  <text wx:else>{{item.name}}</text>
+                </view>
+                  <view style='font-size: 13px;'>
+                    {{item.timestamp}}
+                  </view>
+                </view>
+                <view class="zan-steps__title zan-steps__title--desc zan-c-gray zan-font-12">
+                  <view style='display: flex;justify-content:space-between;'>
+                    <view>
+                      操作：{{item.fromName}}
+                    </view>
+                    <view>
+                      接待：{{item.toName}}
+                    </view>
+                  </view>
+                  <view>
+                    <!-- 备注： -->
+                    {{item.msg}}
+                  </view>
+                </view>
+                <view class="zan-steps__icons">
+                  <view class="zan-steps__circle"></view>
+                </view>
+                <view class="zan-steps__line"></view>
+              </view>
+            </repeat>
+            
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+  <!-- 订单完成后对其进行评价 -->
+  <!-- <button class="zan-btn zan-btn--large zan-btn--primary btn-assess">对接待员评价</button> -->
+  </view>
+</template>
+<script>
+import wepy from 'wepy'
+import http from '../utils/http.js'
+import C from '../constant/index.js'
+
+export default class MyCustomerDetail extends wepy.page {
+  config = {
+    navigationBarTitleText: '客户详情',
+    enablePullDownRefresh: true
+  }
+  data = {
+    osIndex: 0,
+    orderStateList: [],
+    workFlowList: [],
+    o: {
+      building: {},
+      report: {},
+      demand: {},
+      orderStates: [],
+      order: {},
+    },
+
+  }
+  events = {
+
+  }
+  computed = {
+    curWorkFlow() {
+    },
+    nextFlowState() {
+    },
+    userInfo() {
+      return this.$parent.globalData.userInfo
+    },
+  }
+  methods = {
+    tapNextFlowBtn(item,index) {
+      const _this = this
+      let toUserId
+      if(this.userInfo.id == this.o.order.originatorId){
+        toUserId=this.o.order.targetorId
+      }else{
+        toUserId=this.o.order.originatorId
+      }
+      
+
+      const data = {
+        orderId: this.params.orderId,
+        toUserId,
+        state:item.number
+      }
+      http.post('/order/state', data).success(res => {
+        //提示状态变更，刷新页面数据
+        wx.showToast({
+          title: '操作成功',
+          icon: 'success',
+          duration: 2000,
+          success() {
+            //刷新页面数据
+            _this.initData(_this.params)
+          }
+        })
+        //
+      })
+    },
+    pushToBuildingDetail() {
+      this.$navigate('./find_roomDetail', { buildingId: this.o.building.id })
+    },
+    callPhone(tel) {
+      wx.makePhoneCall({
+        phoneNumber: tel
+      })
+    },
+  }
+
+  initData(params) {
+    this.params = params
+    http.get('/order', { orderId: params.orderId }).success(res => {
+      const { demand, report, building, orderStates, order } = res.data
+      demand && (this.data.o.demand = demand[0])
+      report && (this.data.o.report = report[0])
+      building && (this.data.o.building = building[0])
+      order && (this.data.o.order = order[0])
+      orderStates && (this.data.o.orderStates = orderStates.map(v => {
+        if (v.timestamp) {
+          v.timestamp = v.timestamp.replace(/\..*$/, '').replace('T', ' ')
+        }
+        return v
+      }))
+      this.data.o.order.timestamp = this.data.o.order.timestamp.replace(/\..*$/, '').replace('T', ' ')
+      console.log(this.data)
+      this.$apply()
+    })
+  }
+  onLoad(params) {
+    this.params=params;
+    this.initData(params)
+  }
+  onPullDownRefresh() {
+    console.log('onPullDownRefresh')
+    this.initData(this.params)
+    wx.stopPullDownRefresh()
+  }
+}
+
+</script>
+<style lang="less">
+.zan-card {
+  padding: 15px;
+}
+
+.topTip {
+  margin: 30rpx 0 0 31rpx;
+  font-size: 24rpx;
+  color: #999999;
+}
+
+.amountDiv {
+  color: #ee4255;
+  text-align: center;
+  font-size: 30rpx;
+  text {
+    vertical-align: text-top;
+    display: inline-block;
+  }
+  .amount {
+    font-size: 72rpx;
+    line-height: 72rpx;
+  }
+}
+
+
+
+.btn-assess {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 2;
+}
+
+.zan-capsule {
+  display: inline-block;
+  font-size: 12px;
+  vertical-align: middle;
+  line-height: 19px;
+  transform: scale(.83)
+}
+
+.zan-capsule__left,
+.zan-capsule__right {
+  display: inline-block;
+  line-height: 17px;
+  height: 19px;
+  vertical-align: middle;
+  box-sizing: border-box
+}
+
+.zan-capsule__left {
+  padding: 0 2px;
+  color: #fff;
+  background: #999;
+  border-radius: 2px 0 0 2px;
+  border: 1rpx solid #999
+}
+
+.zan-capsule__right {
+  padding: 0 5px;
+  color: #999;
+  border-radius: 0 2px 2px 0;
+  border: 1rpx solid #999
+}
+
+.zan-capsule--danger .zan-capsule__left {
+  color: #fff;
+  background: #f24544;
+  border-color: #f24544
+}
+
+.zan-capsule--danger .zan-capsule__right {
+  color: #f24544;
+  border-color: #f24544
+}
+
+.zan-steps--steps.zan-steps--5 .zan-steps__step {
+  width: 25%
+}
+
+.zan-steps--steps.zan-steps--4 .zan-steps__step {
+  width: 33%
+}
+
+.zan-steps--steps.zan-steps--3 .zan-steps__step {
+  width: 50%
+}
+
+.zan-steps--steps .zan-steps__step {
+  position: relative;
+  float: left;
+  padding-bottom: 25px;
+  color: #b1b1b1
+}
+
+.zan-steps--steps .zan-steps__title {
+  transform: translateX(-50%);
+  font-size: 14px;
+  text-align: center
+}
+
+.zan-steps--steps .zan-steps__icons {
+  position: absolute;
+  top: 30px;
+  left: -10px;
+  padding: 0 8px;
+  background-color: #fff;
+  z-index: 10
+}
+
+.zan-steps--steps .zan-steps__circle {
+  display: block;
+  position: relative;
+  width: 5px;
+  height: 5px;
+  background-color: #e5e5e5;
+  border-radius: 50%
+}
+
+.zan-steps--steps .zan-steps__line {
+  position: absolute;
+  left: 0;
+  top: 32px;
+  width: 100%;
+  height: 1px;
+  background-color: #e5e5e5
+}
+
+.steps .zan-steps__step--done {
+  color: #333
+}
+
+.steps .zan-steps__step--done .zan-steps__line {
+  background-color: #06bf04
+}
+
+.steps .zan-steps__step--done .zan-steps__circle {
+  width: 5px;
+  height: 5px;
+  background-color: #09bb07
+}
+
+.zan-steps--steps .zan-steps__step--cur .zan-steps__icons {
+  top: 25px;
+  left: -14px
+}
+
+.zan-steps--steps .zan-steps__step--cur .zan-steps__circle {
+  width: 16px;
+  height: 16px;
+  background-image: url(https://b.yzcdn.cn/v2/image/wap/success_small@2x.png);
+  background-size: 16px 16px
+}
+
+.zan-steps--steps .zan-steps__step--cur .zan-steps__line {
+  background-color: #e5e5e5
+}
+
+.zan-steps--steps .zan-steps__step--first-child .zan-steps__title {
+  margin-left: 0;
+  transform: none;
+  text-align: left
+}
+
+.zan-steps--steps .zan-steps__step--first-child .zan-steps__icons {
+  left: -7px
+}
+
+.zan-steps--steps .zan-steps__step--last-child {
+  position: absolute;
+  right: 0;
+  top: 0;
+  text-align: right
+}
+
+.zan-steps--steps .zan-steps__step--last-child .zan-steps__title {
+  transform: none;
+  text-align: right
+}
+
+.zan-steps--steps .zan-steps__step--last-child .zan-steps__icons {
+  left: auto;
+  right: -6px
+}
+
+.zan-steps--steps .zan-steps__step--last-child .zan-steps__line {
+  display: none
+}
+
+.zan-steps--steps .zan-steps__step--db-title {
+  min-height: 29px
+}
+
+.zan-steps--steps .zan-steps__step--db-title .zan-steps__line {
+  top: 45px
+}
+
+.zan-steps--steps .zan-steps__step--db-title .zan-steps__icons {
+  top: 43px
+}
+
+.zan-steps--steps .zan-steps__step--db-title.zan-steps__step--cur .zan-steps__icons {
+  top: 39px
+}
+
+.zan-steps--vsteps {
+  color: #999;
+  font-size: 14px
+}
+
+.zan-steps--vsteps .zan-steps__step {
+  position: relative;
+  padding: 15px 0
+}
+
+.zan-steps--vsteps .zan-steps__step--done {
+  color: #4b0
+}
+
+.zan-steps--vsteps .zan-steps__line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 7px;
+  width: 1px;
+  background-color: #e5e5e5
+}
+
+.zan-steps--vsteps .zan-steps__title {
+  display: inline-block;
+  line-height: 20px;
+  padding-left: 27px
+}
+
+.zan-steps--vsteps .zan-steps__title--desc {
+  padding-left: 3px;
+  min-height: 100px;
+  display: block;
+  margin-left: 25px;
+}
+
+.zan-steps--vsteps .zan-steps__icons {
+  position: absolute;
+  left: 7px;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  padding: 3px 0;
+  background-color: #fff
+}
+
+.zan-steps--vsteps .zan-steps__circle {
+  width: 5px;
+  height: 5px;
+  background-color: #cacaca;
+  border-radius: 10px
+}
+
+.zan-steps--vsteps .zan-steps__step--done .zan-steps__circle {
+  width: 5px;
+  height: 5px;
+  background-color: #09bb07
+}
+
+.zan-steps--vsteps .zan-steps__step--cur .zan-steps__circle {
+  width: 16px;
+  height: 16px;
+  background: transparent url(https://b.yzcdn.cn/v2/image/wap/success_small@2x.png);
+  background-size: 16px 16px;
+  border-radius: 0
+}
+
+.zan-steps--vsteps .zan-steps__icon--active {
+  width: 13px;
+  height: 13px
+}
+
+.zan-steps--vsteps .zan-steps__step--first-child .zan-steps__title::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 50%;
+  left: 7px;
+  width: 1px;
+  background-color: #fff;
+  z-index: 1
+}
+
+.zan-steps--vsteps .zan-steps__step--last-child .zan-steps__title::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  bottom: 0;
+  left: 7px;
+  width: 1px;
+  background-color: #fff;
+  z-index: 1
+}
+
+.zan-steps {
+  position: relative
+}
+
+.zan-steps--steps.zan-steps--5 .zan-steps__step {
+  width: 25%
+}
+
+.zan-steps--steps.zan-steps--4 .zan-steps__step {
+  width: 33%
+}
+
+.zan-steps--steps.zan-steps--3 .zan-steps__step {
+  width: 50%
+}
+
+.zan-steps--steps .zan-steps__step {
+  position: relative;
+  float: left;
+  padding-bottom: 25px;
+  color: #b1b1b1
+}
+
+.zan-steps--steps .zan-steps__title {
+  transform: translateX(-50%);
+  font-size: 14px;
+  text-align: center
+}
+
+.zan-steps--steps .zan-steps__icons {
+  position: absolute;
+  top: 30px;
+  left: -10px;
+  padding: 0 8px;
+  background-color: #fff;
+  z-index: 10
+}
+
+.zan-steps--steps .zan-steps__circle {
+  display: block;
+  position: relative;
+  width: 5px;
+  height: 5px;
+  background-color: #e5e5e5;
+  border-radius: 50%
+}
+
+.zan-steps--steps .zan-steps__line {
+  position: absolute;
+  left: 0;
+  top: 32px;
+  width: 100%;
+  height: 1px;
+  background-color: #e5e5e5
+}
+
+.zan-steps--steps .zan-steps__step--done {
+  color: #333
+}
+
+.zan-steps--steps .zan-steps__step--done .zan-steps__line {
+  background-color: #06bf04
+}
+
+.zan-steps--steps .zan-steps__step--done .zan-steps__circle {
+  width: 5px;
+  height: 5px;
+  background-color: #09bb07
+}
+
+.zan-steps--steps .zan-steps__step--cur .zan-steps__icons {
+  top: 25px;
+  left: -14px
+}
+
+.zan-steps--steps .zan-steps__step--cur .zan-steps__circle {
+  width: 16px;
+  height: 16px;
+  background-image: url(https://b.yzcdn.cn/v2/image/wap/success_small@2x.png);
+  background-size: 16px 16px
+}
+
+.zan-steps--steps .zan-steps__step--cur .zan-steps__line {
+  background-color: #e5e5e5
+}
+
+.zan-steps--steps .zan-steps__step--first-child .zan-steps__title {
+  margin-left: 0;
+  transform: none;
+  text-align: left
+}
+
+.zan-steps--steps .zan-steps__step--first-child .zan-steps__icons {
+  left: -7px
+}
+
+.zan-steps--steps .zan-steps__step--last-child {
+  position: absolute;
+  right: 0;
+  top: 0;
+  text-align: right
+}
+
+.zan-steps--steps .zan-steps__step--last-child .zan-steps__title {
+  transform: none;
+  text-align: right
+}
+
+.zan-steps--steps .zan-steps__step--last-child .zan-steps__icons {
+  left: auto;
+  right: -6px
+}
+
+.zan-steps--steps .zan-steps__step--last-child .zan-steps__line {
+  display: none
+}
+
+.zan-steps--steps .zan-steps__step--db-title {
+  min-height: 29px
+}
+
+.zan-steps--steps .zan-steps__step--db-title .zan-steps__line {
+  top: 45px
+}
+
+.zan-steps--steps .zan-steps__step--db-title .zan-steps__icons {
+  top: 43px
+}
+
+.zan-steps--steps .zan-steps__step--db-title.zan-steps__step--cur .zan-steps__icons {
+  top: 39px
+}
+
+.zan-steps--vsteps {
+  color: #999;
+  font-size: 14px
+}
+
+.zan-steps--vsteps .zan-steps__step {
+  position: relative;
+  padding: 15px 0
+}
+
+.zan-steps--vsteps .zan-steps__step--done {
+  color: #4b0
+}
+
+.zan-steps--vsteps .zan-steps__line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 7px;
+  width: 1px;
+  background-color: #e5e5e5
+}
+
+.zan-steps--vsteps .zan-steps__title {
+  display: inline-block;
+  line-height: 20px;
+  padding-left: 27px
+}
+
+.zan-steps--vsteps .zan-steps__title--desc {
+  padding-left: 3px;
+  min-height: 100px;
+  display: block;
+  margin-left: 25px;
+}
+
+.zan-steps--vsteps .zan-steps__icons {
+  position: absolute;
+  left: 7px;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  padding: 3px 0;
+  background-color: #fff
+}
+
+.zan-steps--vsteps .zan-steps__circle {
+  width: 5px;
+  height: 5px;
+  background-color: #cacaca;
+  border-radius: 10px
+}
+
+.zan-steps--vsteps .zan-steps__step--done .zan-steps__circle {
+  width: 5px;
+  height: 5px;
+  background-color: #09bb07
+}
+
+.zan-steps--vsteps .zan-steps__step--cur .zan-steps__circle {
+  width: 16px;
+  height: 16px;
+  background: transparent url(https://b.yzcdn.cn/v2/image/wap/success_small@2x.png);
+  background-size: 16px 16px;
+  border-radius: 0
+}
+
+.zan-steps--vsteps .zan-steps__icon--active {
+  width: 13px;
+  height: 13px
+}
+
+.zan-steps--vsteps .zan-steps__step--first-child .zan-steps__title::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 50%;
+  left: 7px;
+  width: 1px;
+  background-color: #fff;
+  z-index: 1
+}
+
+.zan-steps--vsteps .zan-steps__step--last-child .zan-steps__title::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  bottom: 0;
+  left: 7px;
+  width: 1px;
+  background-color: #fff;
+  z-index: 1
+}
+
+</style>

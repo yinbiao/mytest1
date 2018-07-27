@@ -1,0 +1,108 @@
+<template>
+  <view class="container">
+    <!-- Field 基础用法 -->
+    <view class="zan-panel-title">合作协议图片</view>
+    <view class="zan-panel">
+      <view class="zan-cell zan-field wrapped">
+        <view class="zan-cell__hd zan-field__title">楼盘协议</view>
+        <button class="zan-btn zan-btn--primary zan-btn--small" @tap="add(0)">添加</button>
+      </view>
+      <repeat for="{{buildingImgs}}">
+        <view class='content'>
+          <image src="{{item.url}}" />
+          <text @tap='drop({{item}})'> 删除</text>
+        </view>
+      </repeat>
+    </view>
+    <view class="zan-panel">
+      <view class="zan-cell zan-field wrapped">
+        <view class="zan-cell__hd zan-field__title">中介协议</view>
+        <button class="zan-btn zan-btn--primary zan-btn--small" @tap="add(1)">添加</button>
+      </view>
+      <repeat for="{{brokerImgs}}">
+        <view class='content'>
+          <image src="{{item.url}}" />
+          <text @tap='drop({{item}})'> 删除</text>
+        </view>
+      </repeat>
+    </view>
+  </view>
+</template>
+<script>
+import wepy from 'wepy'
+import http from '../utils/http.js'
+import util from '../utils/util.js'
+export default class Report extends wepy.page {
+  config = {
+    navigationBarTitleText: '合作协议',
+    enablePullDownRefresh: true,
+    backgroundTextStyle: 'dark',
+    backgroundColor: '#ffffff'
+  }
+  data = {
+    buildingImgs: [],
+    brokerImgs: []
+  }
+  methods = {
+    add(type) {
+      const _this = this
+      util.chooseImagesAndUpload({
+        success(res, data) {
+          console.log(type)
+          //res.data为上传图片的单张服务端返回地址，data.path为选择图片的本地文件路径
+          http.post('/user/coparation', { url: res.data, type }).success(res => {
+            const item = {
+              url: data.path,
+              id: res.data.insertId
+            }
+            console.log(type,'type----')
+            type==0 ? _this.buildingImgs.push(item) : _this.brokerImgs.push(item)
+            _this.$apply() //非表单绑定，需要this.$apply()触发脏检查
+          })
+
+        }
+      })
+    },
+    drop(item) {
+      const _this=this;
+      http.delete('/user/coparation', { id: item.id }).success(res => {
+        _this.init()
+      })
+    },
+
+  }
+  init() {
+    http.get('/user/coparation').success(res => {
+      this.buildingImgs.length = 0
+      this.brokerImgs.length = 0
+      res.data.forEach(item => {
+        item.url=this.$parent.globalData.baseAssetsUrl+item.url
+        if (item.type == 0) {
+          this.buildingImgs.push(item)
+        } else if (item.type == 1) {
+          this.brokerImgs.push(item)
+        }
+      })
+      console.log(this.brokerImgs)
+      this.$apply()
+    })
+  }
+  onLoad(params) {
+    this.init()
+  }
+  onPullDownRefresh() {
+    this.init()
+    wx.stopPullDownRefresh()
+  }
+}
+
+</script>
+<style lang="less">
+.content{
+  padding: 15px;
+  image{
+    width: 80%
+  }
+}
+
+</style>

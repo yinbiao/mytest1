@@ -1,0 +1,180 @@
+<template>
+  <view class="container">
+    <view class="zan-tab">
+      <block>
+        <scroll-view class="zan-tab__bd zan-tab__bd--scroll" scroll-x="true" style="display: flex;">
+          <view class="zan-tab__item {{tabIndex==1?'zan-tab__item--selected':''}}" @tap="tabChange({{1}})" style='width: 49%;'>
+            <view class="zan-tab__title">二手房</view>
+          </view>
+          <view class="zan-tab__item {{tabIndex == 2 ? 'zan-tab__item--selected':''}}" @tap="tabChange({{2}})" style='width: 49%;'>
+            <view class="zan-tab__title">租房</view>
+          </view>
+        </scroll-view>
+      </block>
+    </view>
+    <view class="zan-panel">
+      <view class="zan-cell" style='background:#eee;'>
+        <view class="zan-cell__a">城市</view>
+        <view class="zan-cell__bd">房源-平台 元/单</view>
+        <view class="zan-cell__bd">平台-客源 元/单</view>
+      </view>
+      <repeat for="{{list}}">
+        <view class="zan-cell">
+          <view class="zan-cell__a">{{item.cityName}}</view>
+          <view class="zan-cell__bd">
+            <input value="{{item.houseToPlatformFee}}" @input="inputFee({{index}},'houseToPlatformFee')" />
+          </view>
+          <view class="zan-cell__bd">
+            <input value="{{item.platformToHouseFee}}" @input="inputFee({{index}},'platformToHouseFee')" />
+          </view>
+        </view>
+      </repeat>
+    </view>
+    <view class="zan-btns registerSubmit">
+      <button class="zan-btn zan-btn--primary" @tap="submit">保存</button>
+    </view>
+  </view>
+</template>
+<script>
+import wepy from 'wepy'
+import http from '../utils/http.js'
+import util from '../utils/util.js'
+export default class SetPlatformFee2 extends wepy.page {
+  config = {
+    navigationBarTitleText: '设置二手房和租房的费用',
+    enablePullDownRefresh: true
+  }
+
+  computed = {
+    userInfo() {
+      return this.$parent.globalData.userInfo
+    },
+
+  }
+
+  data = {
+    list: [{
+      cityName: '上海',
+      houseToPlatformFee: '500',
+      platformToHouseFee: '200',
+      areaId: 1,
+      type: 1,
+    }],
+    tabIndex: 1,
+  }
+
+  methods = {
+    tabChange(type) {
+
+      console.log(type)
+      this.tabIndex = type
+      const _this = this
+      http.get('/user/platformFee').success(res => {
+        let d = res.data.filter(v => {
+          return v.type == type || v.type == null
+        })
+        //
+        if (d.length == 0) {
+          d = res.data.map(v => {
+            v.houseToPlatformFee = null
+            v.platformToHouseFee = null
+            v.userId = null
+            return v
+          })
+        }
+
+        //新增城市情况
+        // if (res.data.length % 2 == 1 && d.length % 2 == 1) {
+        const n = {}
+        res.data.map(v => {
+          if (n[v._areaId]) {
+            delete n[v._areaId]
+          } else {
+            n[v._areaId] = v
+          }
+        })
+        const m = Object.values(n).map(v => {
+          if (v.type != _this.tabIndex) {
+            v.houseToPlatformFee = null
+            v.platformToHouseFee = null
+            v.userId = null
+          }
+          return v
+        })
+
+        if (d.length - 1 <= res.data.length / 2 && m.length > 0) {
+          d = d.concat(m)
+
+        }
+
+        // }
+        const _d = {}
+        d.map(v => {
+          _d[v._areaId] = v
+        })
+        _this.list = Object.values(_d);
+        _this.$apply()
+      })
+
+    },
+    inputFee(index, key, e) {
+      this.list[index][key] = e.detail.value
+
+      console.log(this.list)
+
+    },
+    submit() {
+      const data = this.list.map(v => {
+        return [
+          this.userInfo.id,
+          v.houseToPlatformFee,
+          v.platformToHouseFee,
+          v._areaId,
+          this.tabIndex
+        ]
+      })
+      http.post('/user/platformFee', { arr: data, type: this.tabIndex }).success(res => {
+        wx.showModal({ title: '提示', content: '设置成功', })
+      })
+    }
+
+  }
+
+  onShow() {}
+
+
+  onPullDownRefresh() {
+
+  }
+
+
+  onLoad() {
+    this.methods.tabChange.call(this, 1); //默认查二手房
+  }
+
+}
+
+</script>
+<style lang="less">
+input {
+  background: #efefef;
+  margin: 0 5px;
+  padding: 0 5px;
+}
+
+.registerSubmit {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.zan-cell__a {
+  flex: 1;
+}
+
+.zan-cell__bd {
+  flex: 2;
+}
+
+</style>

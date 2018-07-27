@@ -1,0 +1,130 @@
+<template>
+  <view class="container">
+
+   <view class="zan-panel-title">开发临时入口</view>
+    <view class="zan-panel">
+      <navigator wx:for="{{ content }}" wx:key="name" class="zan-cell zan-cell--access" url="{{ item.path }}">
+        <view class="zan-cell__bd">{{ item.name }}</view>
+        <view class="zan-cell__ft"></view>
+      </navigator>
+    </view>
+
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+
+  export default class devEntry extends wepy.component {
+    config = {
+      navigationBarTitleText: 'dev nav',
+      enablePullDownRefresh: true,
+      backgroundTextStyle: 'dark',
+      backgroundColor: '#ffffff'
+    }
+      
+    data={
+      content:[
+        {
+          name: 'pages/msg_list',
+          path: '/pages/msg_list'
+        },
+        {
+          name: 'pages/dropDownMenu',
+          path: '/pages/dropDownMenu'
+        },
+        {
+          name: 'pages/rule_note',
+          path: '/pages/rule_note'
+        },
+        {
+          name: 'pages/msg',
+          path: '/pages/msg',
+        },
+        {
+          name: 'pages/add_building',
+          path: '/pages/add_building'
+        },
+        {
+          name: 'pages/my_customerDetail',
+          path: '/pages/my_customerDetail'
+        },
+        {
+          name: 'pages/custom_demandDetail',
+          path: '/pages/custom_demandDetail'
+        },
+        {
+          name: 'pages/report',
+          path: '/pages/report'
+        },
+
+        {
+          name: 'pages/find_roomDetail',
+          path: '/pages/find_roomDetail'
+        },
+        
+        {
+          name: 'pages/recharge_wallet',
+          path: '/pages/recharge_wallet'
+        },
+        {
+          name: 'pages/my_wallet',
+          path: '/pages/my_wallet'
+        },
+        {
+          name: 'pages/custom_demandList',
+          path: '/pages/custom_demandList'
+        },
+
+        {
+          name: 'pages/register',
+          path: '/pages/register'
+        },
+        {
+          name: 'pages/add_customer',
+          path: '/pages/add_customer'
+        },
+        {
+          name: 'pages/find_buildingList',
+          path: '/pages/find_buildingList'
+        },
+        {
+          name: 'pages/find_cityList',
+          path: '/pages/find_cityList'
+        },
+        {
+          name: 'pages/my_buildingList',
+          path: '/pages/my_buildingList'
+        },
+
+        {
+          name: 'pages/my_demandList',
+          path: '/pages/my_demandList'
+        },
+        {
+          name: 'pages/my_customer',
+          path: '/pages/my_customer'
+        },
+        {
+          name: 'pages/my_team',
+          path: '/pages/my_team'
+        },
+        {
+          name: 'pages/find_search',
+          path: '/pages/find_search'
+        },
+        {
+          name: 'pages/find_roomFilter',
+          path: '/pages/find_roomFilter'
+        }
+
+      ]
+    }
+    
+
+  }
+</script>
+
+<style lang="less">
+ 
+</style>

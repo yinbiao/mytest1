@@ -1,0 +1,56 @@
+<template>
+  <view wx:if="{{areas.length > 0}}" class="hotAreas">
+    <view>
+      <text class="mg-font-28 mg-lightgray">热门标签</text>
+    </view>
+    <view class="labels">
+      <repeat for="{{areas}}" key="index" item="item">
+        <view class="label" @tap="tap({{item.paraType}}, {{item.paraName}}, {{item.paraValue}})">
+          <text>{{item.paraName}}</text>
+        </view>
+      </repeat>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+export default class HotAreas extends wepy.component {
+  props = {
+    areas: {
+      type: Array,
+      default: []
+    }
+  }
+
+  methods = {
+    tap (type, key, value) {
+      this.$emit('searchResult', {
+        name: key,
+        type: 'searchWord'
+      });
+    }
+  }
+
+  onLoad() {
+  }
+}
+</script>
+
+<style lang="less">
+  .hotAreas {
+    padding: 30rpx;
+    .labels{
+      margin: 30rpx 0;
+    }
+    .label {
+      display: inline-block;
+      font-size: 28rpx;
+      padding: 10rpx 30rpx;
+      margin: 0 15rpx 15rpx 0;
+      border: 1rpx solid #e5e5e5;
+      color: #4a4a4a;
+      border-radius: 8rpx;
+    }
+  }
+</style>

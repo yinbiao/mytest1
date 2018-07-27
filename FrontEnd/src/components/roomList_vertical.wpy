@@ -1,0 +1,290 @@
+<template>
+  <view class="roomList_vertical">
+    <view class="itemListView">
+      <repeat for="{{roomList}}" key="index">
+        <view class="roomView" @tap="gotoRoomDetail({{item.id}})">
+          <image class="roomImg" src="{{item.banner}}" mode="aspectFill" lazy-load="true"></image>
+          <view class="roomInfo">
+            <view class="top">
+              <view class="mg-cell mg-color-dark title">
+                <view class="item-title">
+                  <text style='display: block;flex: 2;overflow: hidden;text-overflow: ellipsis;'>{{item.buildingName}} </text>
+                  <text class="mg-color-orange" style='display: block;flex: 1;overflow: hidden;text-overflow: ellipsis;text-align: right;'> {{item.averagePrice}}/㎡</text>
+                </view>
+              </view>
+              <view class="mg-font-small mg-color-normal" style="margin-top:8rpx;">{{item.address}} ·
+                <!-- 徐汇区-永嘉路485弄 · 100-150㎡ -->
+              </view>
+              <view class="mg-font-small mg-color-light mg-cell" style="margin-top:8rpx;">
+                <!--  <i class="icon-location"></i> -->
+                <!-- <view>客户 10 | 带看 5 | 成交 1</view> ????????????-->
+              </view>
+            </view>
+            <view class="bottom">
+              <view class="tags">
+                <text class="label-type3 tag-label">{{item.propertyTypeName}}</text>
+                <text class="label-type2 tag-label">{{item.saleTypeName}}</text>
+              </view>
+              <text class="mg-color-orange mg-font-small amount">
+                <text class="mg-color-normal">佣金:</text>
+                <text class="mg-font-mid">{{item.commision}}</text>
+              </text>
+            </view>
+          </view>
+          <!-- <view style='display: flex;align-items: center;' wx:if="{{isMine && userInfo.permission.deleteMyBuilding}}">
+            <button class="zan-btn zan-btn--small zan-btn--warn" style="align-self: center;" @tap.stop="tapDelete({{item}},{{index}})">删除</button>
+          </view> -->
+        </view>
+      </repeat>
+    </view>
+    <!-- <view class="{{(listStatus === 2 || listStatus === 4 || listStatus === 5) ? 'loadMore' : 'loadMore hide'}}">
+      <view hidden="{{!(listStatus === 2 || listStatus === 4)}}">
+        <image src="https://assets.mgzf.com/appimg/f597b076a5fe7c8b276390e03f5ff7b2.gif"></image>
+        <Spinner width="44rpx" height="44rpx"></Spinner>
+        <text>正在加载</text>
+      </view>
+      <view hidden="{{!(listStatus === 5)}}">
+        <text>无更多数据</text>
+      </view>
+    </view>
+    <view class="{{(listStatus === 6) ? 'pageTip' : 'pageTip hide'}}">
+      <view hidden="{{!(listStatus === 6)}}">
+        <image src="https://assets.mgzf.com/appimg/0e85c4a21b8d47f83f4cb7b5b11561dc.svg"></image>
+        <text>没有找到符合条件的房源哦</text>
+      </view>
+    </view> -->
+  </view>
+</template>
+<script>
+import wepy from 'wepy'
+import http from '../utils/http.js'
+
+export default class RoomListVertical extends wepy.component {
+  components = {}
+  computed = {
+    userInfo() {
+      return this.$parent.$parent.globalData.userInfo
+    },
+
+  }
+
+
+
+  fetchDeleteBuilding(item) {
+    http.delete('/building', { id: item.id })
+      .success(res => {
+        wx.showToast({
+          title: '删除成功',
+          icon: 'success',
+          duration: 4000
+        })
+      })
+  }
+  props = {
+    roomList: {
+      type: Array,
+      default: []
+    },
+    // 0: 初始状态；
+    // 1：首次正在加载数据；
+    // 2：正在上拉加载数据；
+    // 3：正在下拉刷新数据；
+    // 4：加载完成，数据正常，有下一页；
+    // 5：加载完成，无下一页；
+    // 6：无数据；
+    // 7：首次加载接口报错；
+    // 8；上拉加载接口报错
+    listStatus: {
+      type: Number,
+      default: 0
+    }
+  }
+
+  data = {
+    isMine: 0
+  }
+  watch = {
+
+  }
+  methods = {
+    tapDelete(item, index) {
+      const _this = this
+      wx.showModal({
+        title: '提示',
+        content: `确认删除楼盘 ${item.buildingName} 码？`,
+        success: function(res) {
+          if (res.confirm) {
+            _this.fetchDeleteBuilding(item)
+            _this.roomList.splice(index, 1)
+            _this.$apply()
+          } else if (res.cancel) {
+            console.log('用户点击取消')
+          }
+        }
+      })
+    },
+    gotoRoomDetail(buildingId) {
+      this.$parent.$navigate('./find_roomDetail', {
+        buildingId: buildingId
+      })
+    }
+  }
+
+  onLoad(params) {
+    setTimeout(t => {
+      this.isMine = this.$root.urlParams && this.$root.urlParams.mine
+    }, 100)
+
+  }
+}
+
+</script>
+<style lang="less">
+.roomList_vertical {
+  margin-top: 94px;
+  .item-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  background-color: #fff;
+  .roomView {
+    margin: 0 40rpx;
+    padding: 30rpx 0;
+    display: flex;
+    border-bottom: 1rpx solid #e5e5e5;
+    .roomImg {
+      width: 240rpx;
+      height: 180rpx;
+      border-radius: 8rpx;
+      flex: none;
+      border: 1rpx solid #f5f5f5;
+      box-sizing: border-box;
+    }
+    .roomInfo {
+      width: 410rpx;
+      min-height: 180rpx;
+      margin-left: 20rpx;
+      display: flex;
+      flex-flow: column;
+      justify-content: space-between;
+      view {
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      .icon-location {
+        flex: none;
+      }
+      .title {
+        font-size: 30rpx;
+        .quanicon {
+          width: 40rpx;
+          height: 28rpx;
+          margin-right: 12rpx;
+          background-image: url("https://assets.mgzf.com/appimg/a46a076103204e6599647db0e045c499.png");
+          background-size: cover;
+          flex: none;
+        }
+        .jjricon {
+          width: 25rpx;
+          height: 30rpx;
+          margin-right: 12rpx;
+          background-image: url('https://assets.mgzf.com/appimg/a9ba3eea122f6f4b8c8b4e88617ae442.png');
+          background-size: cover;
+          flex: none;
+        }
+      }
+      .bottom {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 10rpx;
+        .tags {
+          white-space: normal;
+        }
+        .amount {
+          white-space: nowrap;
+        }
+      }
+    }
+  }
+
+  .itemListView {
+    background-color: #ffffff;
+  }
+
+  .loadMore {
+    height: 100rpx;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text {
+      color: #999999;
+      font-size: 24rpx;
+      display: inline-block;
+      vertical-align: middle;
+      position: relative;
+      top: -4rpx
+    }
+    image {
+      height: 40rpx;
+      width: 40rpx;
+      margin-right: 10rpx;
+      display: inline-block;
+      vertical-align: middle;
+    }
+  }
+  .pageTip {
+    height: 300rpx;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    view {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    text {
+      color: #999999;
+      font-size: 24rpx;
+    }
+    image {
+      height: 100rpx;
+      width: 100rpx;
+      margin-bottom: 30rpx;
+      display: block;
+    }
+  }
+  .hide {
+    display: none;
+  } // 标签样式类
+  .tags {
+    .label-type2 {
+      background-color: #f6e9fe;
+      color: #a323f2;
+    }
+    .label-type3 {
+      background-color: #e5f1ff;
+      color: #007aff;
+    }
+    .label-type4 {
+      background-color: #e7f5fe;
+      color: #189bfa;
+    }
+    .label-payment-monthly {
+      background-color: #ffeacc;
+      color: #ff7200;
+    }
+    .label-type-xyz {
+      background-color: #E3F8F4;
+      color: #21C4A8;
+    }
+  }
+}
+
+</style>

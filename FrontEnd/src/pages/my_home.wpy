@@ -1,0 +1,711 @@
+<template>
+  <view class="container">
+    <view class="bg-white">
+      <view class="mg-cell info">
+        <image wx:if="{{userInfo.avatarUrl}}" src="{{userInfo.avatarUrl}}" lazy-load="true" mode="aspectFill"></image>
+        <image wx:else src="https://assets.mgzf.com/appimg/abfb9d001f00ac14869efdc386d474b1.png" lazy-load="true" mode="aspectFill" @tap="pushToPage('./authUserInfo')"></image>
+        <view class="mg-font-large mg-color-dark phone" style="flex-grow: 1;margin-right: 20px;">
+          <text wx:if="{{userInfo.name}}" class="nickname">{{userInfo.name}}</text>
+          <text wx:if="{{!userInfo.phoneNum}}" class="nickname" @tap="login">点击注册/登录</text>
+          <text wx:if="{{userInfo.phoneNum}}" class="nickname">{{userInfo.phoneNum}} </text>
+          <view wx:if="{{userInfo.companyName}}" class="userInfo2">
+            <text>{{userInfo.companyName}}</text>
+            <text>{{userInfo.roleName}}</text>
+          </view>
+          <view wx:elif="{{userInfo.applyVerified > -1}}" class="userInfo2">
+            <text>{{userInfo.applycompanyName}}</text>
+            <text>{{userInfo.applyState}}</text>
+          </view>
+          <!-- <text wx:if="{{!userInfo.companyName}}" @tap="pushToPage('./register')" class="zan-btn zan-btn--primary zan-btn--small"> 企业注册</text> -->
+        </view>
+      </view>
+      <view class="menuItem mg-cell userInfo2 userInfo3" wx:if="{{(userInfo.phoneNum && !userInfo.applycompanyName && !userInfo.companyName) || userInfo.applyVerified == 2}}">
+        <view class="left mg-cell" @tap="pushToPage('./register')">
+          <text>公司注册</text>
+        </view>
+        <view class="right mg-cell" style='border-left: 1px solid #eee;' @tap="joinCompany">
+          <text>加入公司</text>
+        </view>
+      </view>
+      <!-- 1审通过状态后，出现如下按钮，上传后隐藏按钮 -->
+      <!-- 入驻审核:0初始状态，1申请状态一审审核中，2一审不通过，3一审通过，4二审审核中，5二审不通过，6二审通过  -->
+      <view class="menuItem mg-cell userInfo2 userInfo3" wx:if="{{!userInfo.companyName && (userInfo.applyVerified == 3 || userInfo.applyVerified == 5)}}">
+        <view class="left mg-cell" @tap="downLoadCoparation">
+          <text>下载合作协议</text>
+        </view>
+        <view class="right mg-cell" style='border-left: 1px solid #eee;' @tap="uploadCoparation">
+          <text>上传合作协议</text>
+        </view>
+      </view>
+      <view class="manage mg-cell" wx:if="{{userInfo.permission.getMyTeam}}">
+        <!-- <view class="cellItem" @tap="pushToPage({{'./add_building'}})">
+          <view class="zan-icon zan-icon-wap-home" style="color: #09bb07;font-size:50rpx;"></view>
+          <view class="mg-font-mid">发布房源 中介不发布房源，只发布需求</view>
+        </view> -->
+        <view class="cellItem" @tap="pushToPage({{'./add_building'}})" wx:if="{{userInfo.permission.postBuilding}}">
+          <view class="zan-icon zan-icon-wap-home" style="color: #09bb07;font-size:50rpx;"></view>
+          <view class="mg-font-mid">发布楼盘</view>
+          <!-- 发布|编辑楼盘 -->
+        </view>
+        <view class="cellItem" @tap="pushToPage({{'./add_customer'}})" wx:if="{{userInfo.permission.postDemand}}">
+          <view class="zan-icon zan-icon-edit" style="color: #09bb07;font-size:50rpx;"></view>
+          <view class="mg-font-mid">发布需求</view>
+        </view>
+        <view class="cellItem" @tap="pushToPage({{'./my_team'}})" wx:if="{{userInfo.permission.getMyTeam}}">
+          <view class="zan-icon zan-icon-contact" style="color: #944;font-size:50rpx;"></view>
+          <view class="mg-font-mid">我的团队</view>
+        </view>
+      </view>
+      <!-- <view class="my_num" wx:if="{{userInfo.permission.getMyAchievements}}" @tap="pushToPage('./my_customer')">
+        <view class="my_num_view">
+          <view class="zan-icon zan-icon-records" style="margin-right:16rpx;"></view>
+          <text>我的成果</text>
+
+          <view class="icon-arrow-right" style="float:right;"></view>
+        </view>
+        <view class="manage mg-cell">
+          <view class="cellItem">
+            <view class="mg-font-mid">0</view>
+            <view class="zan-c-gray-dark">总客户数</view>
+          </view>
+          <view class="cellItem">
+            <view class="mg-font-mid">0</view>
+            <view class="zan-c-gray-dark">报备数</view>
+          </view>
+          <view class="cellItem">
+            <view class="mg-font-mid">0</view>
+            <view class="zan-c-gray-dark">带看数</view>
+          </view>
+          <view class="cellItem">
+            <view class="mg-font-mid">0</view>
+            <view class="zan-c-gray-dark">签约数</view>
+          </view>
+        </view>
+      </view> -->
+    </view>
+    <view class="mg-content-block menuContainer">
+      <!-- <view class="menuItem mg-cell" @tap="testPay">
+        <view class="left mg-cell">
+          <view class="zan-icon zan-icon-exchange-record" style=""></view>
+          <text>支付测试</text>
+        </view>
+      </view> -->
+      <view class="menuItem mg-cell" @tap="pushToPage({{'./verifyList'}})" wx:if='{{userInfo.permission.verifyList}}'>
+        <view class="left mg-cell">
+          <view class="zan-icon zan-icon-exchange-record" style=""></view>
+          <text>入驻审核</text>
+        </view>
+        <view class="right mg-cell">
+          <view class="icon-arrow-right"></view>
+        </view>
+      </view>
+      <view class="menuItem mg-cell" @tap="pushToPage({{'./setPlatformFee2'}})">
+        <view class="left mg-cell">
+          <view class="zan-icon zan-icon-exchange-record" style=""></view>
+          <text>二手房和租房的佣金</text>
+          <!-- 按(需求)城市，房源给平台的，平台给客源， -->
+        </view>
+        <view class="right mg-cell">
+          <view class="icon-arrow-right"></view>
+        </view>
+      </view>
+      <view class="menuItem mg-cell" @tap="pushToPage({{'./vipList'}})" wx:if='{{userInfo.permission.verifyList}}'>
+        <!-- 平台用 按中介、楼盘、时间、城市、区域、分配给经理和业务员、成交量、平台费、上下架、成交量、设置平台费 -->
+        <view class="left mg-cell">
+          <view class="zan-icon zan-icon-exchange-record"></view>
+          <text>会员管理</text>
+        </view>
+        <view class="right mg-cell">
+          <view class="icon-arrow-right"></view>
+        </view>
+      </view>
+      <view class="menuItem mg-cell" @tap="pushToPage({{'./noticeList'}})">
+        <view class="left mg-cell  zan-badge">
+          <view class="zan-icon zan-icon-exchange-record" style=""></view>
+          <text>通知</text>
+          <view class="zan-badge__count" style='top:-6px;right: -15px;' wx:if='{{notice.unreadCount}}'>{{notice.unreadCount}}</view>
+        </view>
+        <view class="right mg-cell">
+          <view class="icon-arrow-right"></view>
+        </view>
+      </view>
+      <view class="menuItem mg-cell" @tap="showQrCode" wx:if="{{userInfo.permission.companyQrcode}}">
+        <!-- wx:if="{{userInfo.companyId}}" -->
+        <view class="left mg-cell  zan-badge">
+          <view class="zan-icon zan-icon-exchange-record" style=""></view>
+          <text>公司二维码</text>
+        </view>
+        <view class="right mg-cell">
+          <view class="icon-arrow-right"></view>
+        </view>
+      </view>
+      <view class="menuItem mg-cell" @tap="pushToPage({{'./coparation'}})" wx:if="{{userInfo.permission.uploadCoparation}}">
+        <!-- wx:if="{{userInfo.companyId}}" -->
+        <view class="left mg-cell  zan-badge">
+          <view class="zan-icon zan-icon-exchange-record" style=""></view>
+          <text>上传合作协议</text>
+        </view>
+        <view class="right mg-cell">
+          <view class="icon-arrow-right"></view>
+        </view>
+      </view>
+      <view class="menuItem mg-cell" @tap="showMyQrCode" wx:if="{{userInfo.permission.myQrcode}}">
+        <!-- wx:if="{{userInfo.companyId}}" -->
+        <view class="left mg-cell  zan-badge">
+          <view class="zan-icon zan-icon-exchange-record" style=""></view>
+          <text>我的二维码</text>
+        </view>
+        <view class="right mg-cell">
+          <view class="icon-arrow-right"></view>
+        </view>
+      </view>
+      <!-- <view class="menuItem mg-cell" @tap="pushToPage({{'./find_buildingList'}})" wx:if="{{userInfo.permission.manageBuildings}}">
+        <view class="left mg-cell">
+          <view class="zan-icon zan-icon-exchange" style=""></view>
+          <text>管理楼盘</text>
+        </view>
+        <view class="right mg-cell">
+          <view class="icon-arrow-right"></view>
+        </view>
+      </view> -->
+      <view class="menuItem mg-cell" @tap="pushToPage({{'./buildingNews'}})" wx:if="{{userInfo.permission.buildingNews}}">
+        <view class="left mg-cell">
+          <view class="zan-icon zan-icon-exchange" style=""></view>
+          <text>楼盘动态</text>
+        </view>
+        <view class="right mg-cell">
+          <view class="icon-arrow-right"></view>
+        </view>
+      </view>
+      <!-- <view class="cellItem" @tap="pushToPage({{'./buildingNews'}})" wx:if="{{userInfo.permission.buildingNews}}">
+          <view class="zan-icon zan-icon-wap-home" style="color: #09bb07;font-size:50rpx;"></view>
+          <view class="mg-font-mid">楼盘动态</view>
+        </view> -->
+      <!-- <view class="menuItem mg-cell" @tap="" wx:if="{{userInfo.permission.setCommissionPlatform}}">
+        <view class="left mg-cell">
+          <view class="zan-icon zan-icon-exchange" style=""></view>
+          <text>设置楼盘给平台的佣金</text>
+        </view>
+        <view class="right mg-cell">
+          <view class="icon-arrow-right"></view>
+        </view>
+      </view> -->
+      <!-- <view class="menuItem mg-cell" @tap="" wx:if="{{userInfo.permission.setCommissionAgency}}">
+        <view class="left mg-cell">
+          <view class="zan-icon zan-icon-exchange" style=""></view>
+          <text>设置平台给中介的佣金</text>
+        </view>
+        <view class="right mg-cell">
+          <view class="icon-arrow-right"></view>
+        </view>
+      </view> -->
+      <view class="menuItem mg-cell" @tap="pushToPage('./banner')" wx:if="{{userInfo.permission.setBanner}}">
+        <view class="left mg-cell">
+          <view class="zan-icon zan-icon-edit-data" style=""></view>
+          <text>发布更新首页Banner</text>
+        </view>
+        <view class="right mg-cell">
+          <view class="icon-arrow-right"></view>
+        </view>
+      </view>
+      <!-- <view class="menuItem mg-cell" @tap="pushToPage({{'./my_team'}})" wx:if="{{userInfo.permission.manageUsers}}">
+        <view class="left mg-cell">
+          <view class="zan-icon zan-icon-contact"  style=""></view>
+          <text>管理人员</text>
+        </view>
+        <view class="right mg-cell">
+          <view class="icon-arrow-right"></view>
+        </view>
+      </view> -->
+    </view>
+    <!-- <view class="mg-content-block menuContainer" wx:if="{{userInfo.permission.getMyWallet}}">
+      <view class="menuItem mg-cell" @tap="pushToPage({{'./my_wallet'}})">
+        <view class="left mg-cell">
+          <view class="zan-icon zan-icon-gold-coin" style=""></view>
+          <text>我的钱包</text>
+        </view>
+        <view class="right mg-cell">
+          <view class="icon-arrow-right"></view>
+        </view>
+      </view>
+    </view> -->
+    <view class="mg-content-block menuContainer">
+      <!-- 楼盘管理员编辑自己的楼盘用 -->
+      <view class="menuItem mg-cell" @tap="pushToPage({{'./find_buildingList?mine=1'}})" wx:if="{{userInfo.permission.getMyBuildings}}">
+        <view class="left mg-cell">
+          <view class="zan-icon zan-icon-birthday-privilege" style=""></view>
+          <text>我的楼盘</text>
+        </view>
+        <view class="right mg-cell">
+          <view class="icon-arrow-right"></view>
+        </view>
+      </view>
+      <view class="menuItem mg-cell" @tap="pushToPage({{'./custom_demandList?mine=1'}})" wx:if="{{userInfo.permission.getMyDemands}}">
+        <!-- 中介编辑自己发布的需求用 -->
+        <view class="left mg-cell">
+          <view class="zan-icon zan-icon-tosend" style=""></view>
+          <text>我的需求列表</text>
+        </view>
+        <view class="right mg-cell">
+          <view class="icon-arrow-right"></view>
+        </view>
+      </view>
+      <!--<view class="menuItem mg-cell" @tap="pushToPage({{'./custom_demandList?mine=1'}})">
+         中介发布和编辑自己发布的房源用
+        <view class="left mg-cell">
+          <view class="zan-icon zan-icon-tosend" style=""></view>
+          <text>房源列表</text>
+        </view>
+        <view class="right mg-cell">
+          <view class="icon-arrow-right"></view>
+        </view>
+      </view> -->
+      <view class="menuItem mg-cell" @tap="pushToPage({{'./my_customer'}})" wx:if="{{userInfo.permission.getMyOrders}}">
+        <!-- 和自己有关的订单列表状态 -->
+        <view class="left mg-cell">
+          <view class="zan-icon zan-icon-records" style=""></view>
+          <text>订单列表</text>
+        </view>
+        <view class="right mg-cell">
+          <view class="icon-arrow-right"></view>
+        </view>
+      </view>
+      <view class="menuItem mg-cell" @tap="pushToPage({{'./bill'}})" wx:if="{{userInfo.permission.getMyBills}}">
+        <view class="left mg-cell">
+          <!-- 历史账单和待支付账单 订单结束后的已支付和未支付记录--> 
+          <view class="zan-icon zan-icon-pending-payment" style=""></view>
+          <text>我的账单</text>
+          <view class="zan-badge__count" style='top:-6px;right: -15px;' wx:if='{{unpaidBillCount}}'>{{unpaidBillCount}}</view>
+        </view>
+        <view class="right mg-cell">
+          <view class="icon-arrow-right"></view>
+        </view>
+      </view>
+      <view class="menuItem mg-cell" @tap="pushToPage({{'./my_customer?myReport=1'}})" wx:if="{{userInfo.permission.myReport}}">
+        <view class="left mg-cell">
+          <view class="zan-icon zan-icon-pending-orders" style=""></view>
+          <text>我的报备</text>
+        </view>
+        <view class="right mg-cell">
+          <view class="icon-arrow-right"></view>
+        </view>
+      </view>
+      <view class="menuItem mg-cell" @tap="pushToPage({{'./find_buildingList?attention=1'}})">
+        <view class="left mg-cell">
+          <view class="zan-icon zan-icon-like-o" style=""></view>
+          <text>我的关注</text>
+        </view>
+        <view class="right mg-cell">
+          <view class="icon-arrow-right"></view>
+        </view>
+      </view>
+      <view class="menuItem mg-cell" wx:if="{{userInfo.permission.servicer}}" @tap="">
+        <view class="left mg-cell">
+          <view class="zan-icon zan-icon-like-o" style=""></view>
+          <text>我的维护人</text>
+        </view>
+        <view class="right mg-cell" wx:if="{{userInfo.platformUserId!=1}}">
+          {{userInfo.platformUserName || userInfo.platformNickName}} {{userInfo.phoneNum}}
+          <!-- <view class="icon-arrow-right"></view> -->
+        </view>
+        <view wx:else>无维护人</view>
+      </view>
+    </view>
+    <view class="zan-dialog {{  qrCode? 'zan-dialog--show' : '' }}">
+      <view class="zan-dialog--mask"></view>
+      <view class="zan-dialog--container">
+        <view class="zan-dialog__header">公司二维码</view>
+        <view class="zan-dialog__content {{ 1 ? 'zan-dialog__content--title' : '' }}" style="text-align: center;">
+          <image src="{{qrCode}}" style="width:120px;height: 120px;" />
+        </view>
+        <view class="zan-dialog__footer {{ 1? 'zan-dialog__footer--vertical' : 'zan-dialog__footer--horizon' }}">
+          <button class="zan-dialog__button zan-btn" style="color: #333" @tap="hideQrCode">用好了</button>
+        </view>
+      </view>
+    </view>
+  </view>
+  <view class="zan-dialog {{  myQrCode? 'zan-dialog--show' : '' }}">
+    <view class="zan-dialog--mask"></view>
+    <view class="zan-dialog--container">
+      <view class="zan-dialog__header">我的二维码</view>
+      <view class="zan-dialog__content {{ 1 ? 'zan-dialog__content--title' : '' }}" style="text-align: center;">
+        <image src="{{myQrCode}}" style="width:120px;height: 120px;" />
+      </view>
+      <view class="zan-dialog__footer {{ 1? 'zan-dialog__footer--vertical' : 'zan-dialog__footer--horizon' }}">
+        <button class="zan-dialog__button zan-btn" style="color: #333" @tap="hideQrCode">用好了</button>
+      </view>
+    </view>
+  </view>
+  <view class="copyright">
+    <view>Copyright@2018</view>
+    <view>哈曼丁网络科技 版权所有</view>
+  </view>
+  </view>
+</template>
+<script>
+import wepy from 'wepy'
+import http from '../utils/http.js'
+import util from '../utils/util.js'
+export default class MyHome extends wepy.page {
+  config = {
+    navigationBarTitleText: '我的',
+    enablePullDownRefresh: true
+  }
+
+  computed = {
+    userInfo() {
+      return this.$parent.globalData.userInfo
+    },
+
+  }
+
+  // watch = {
+  //   userInfo(newValue,oldValue){
+
+  //   }
+  // }
+  data = {
+    showBottomPopup: false,
+    notice: {},
+    qrCode: null,
+    myQrCode: null,
+    unpaidBillCount:0,
+  }
+
+  methods = {
+    testPay() {
+      http.post('/order/pay').success(res => {
+
+        wx.requestPayment({
+          ...res.data,
+          success(res) {
+            wx.showModal({ title: '提示', content: 'success' })
+          },
+          fail(res) {
+            wx.showModal({ title: '提示', content: 'fail' })
+          },
+          complete(res) {
+            wx.showModal({ title: '提示', content: 'complete' })
+          }
+        })
+      })
+    },
+    uploadCoparation() {
+      const _this = this
+      util.chooseImagesAndUpload({
+        success(res, data) {
+          //res.data为上传图片的单张服务端返回地址，data.path为选择图片的本地文件路径
+          http.post('/user/uploadCoparation', { url: res.data }).success(res => {
+            wx.showModal({
+              title: '提示',
+              content: '协议上传成功',
+            })
+            _this.getUserInfo()
+            // _this.$apply() //非表单绑定，需要this.$apply()触发脏检查
+          })
+
+        }
+      })
+    },
+    downLoadCoparation() {
+      http.get('/user/downLoadCoparation').success(res => {
+        if (!res.data.length) {
+          wx.showToast({ title: '没有可用的协议。' })
+          return;
+        }
+        res.data.forEach(item => {
+          wx.downloadFile({
+            url: this.$parent.globalData.baseAssetsUrl + item.url,
+            success: function(res) {
+              wx.saveImageToPhotosAlbum({
+                filePath: res.tempFilePath,
+                success(res) {
+                  // wx.showToast({ title: '成功保存到相册中了' })
+                  wx.showModal({
+                    title: '提示',
+                    content: '协议保存到相册成功',
+                  })
+                },
+                fail(err) {
+                  console.error(res)
+                  wx.showToast({ title: '失败' })
+                  if (err.errMsg == "saveImageToPhotosAlbum:fail auth deny") {
+                    console.log("用户一开始拒绝了，我们想再次发起授权")
+                    console.log('打开设置窗口')
+                    wx.openSetting({
+                      success(settingdata) {
+                        console.log(settingdata)
+                        if (settingdata.authSetting['scope.writePhotosAlbum']) {
+                          console.log('获取权限成功，给出再次点击图片保存到相册的提示。')
+
+                        } else {
+
+                          console.log('获取权限失败，给出不给权限就无法正常使用的提示')
+                        }
+                      },
+                      fail(err) {
+                        console.log(err, 'openSetting fail')
+                      }
+                    }) //endof opensettiong
+                  }
+
+                },
+                complete(res) {
+                  wx.showToast({ title: 'complete' })
+                },
+
+              })
+            },
+            fail(res) {
+              wx.showModal({
+                title: '提示',
+                content: '下载图片失败' + JSON.stringify(res),
+              })
+            },
+            complete(res) {
+              wx.showToast({ title: '下载图片完成' })
+            }
+          })
+        })
+      })
+
+    },
+    hideQrCode() {
+      this.qrCode = null
+      this.myQrCode = null
+    },
+    showQrCode() {
+      //qrcode api地址： http://tool.kd128.com/tool/qrcode.html
+      const companyId = this.userInfo.companyId
+      const companyName = this.userInfo.companyName
+      const text = JSON.stringify({ companyId, companyName })
+      this.qrCode = `https://tool.kd128.com/qrcode?logo=${this.userInfo.avatarUrl}&w=100&text=${text}`
+    },
+    showMyQrCode() {
+      //qrcode api地址： http://tool.kd128.com/tool/qrcode.html
+      const id = this.userInfo.id
+      const name = this.userInfo.name || this.userInfo.nickName
+      const text = JSON.stringify({ id, name })
+      this.myQrCode = `https://tool.kd128.com/qrcode?logo=${this.userInfo.avatarUrl}&w=100&text=${text}`
+    },
+    joinCompany() {
+      const _this = this
+      wx.showModal({
+        title: '提示',
+        content: '请扫描公司二维码',
+        confirmText: '开始扫描',
+        success: function(res) {
+          if (res.confirm) {
+            // 允许从相机和相册扫码
+            wx.scanCode({
+              success: (res) => {
+                console.log(res)
+                if (res !== 0) {
+                  //扫描完成后提示是否加入某某公司 - > 确认过程 
+                  _this.confirmJoinCompany(JSON.parse(res.result))
+
+                }
+
+              }
+            })
+          } else if (res.cancel) {
+            console.log('用户点击取消.')
+          }
+        }
+      })
+    },
+
+    login() {
+      this.$navigate('./login')
+    },
+    pushToPage(address, params) {
+      let data = {}
+      // if(params == 'attention'){
+      //   data['attention']=1
+      // }
+      this.$navigate(address, data);
+    },
+
+  }
+
+  confirmJoinCompany(company) {
+
+    wx.showModal({
+      title: '提示',
+      content: `请确认要加入 ${company.companyName} 公司么`,
+      success: function(res) {
+        if (res.confirm) {
+          //发送确认请求
+          const { companyId, departmentNum } = company
+          http.post('/user/joinCompany', { companyId }).success(v => {
+            wx.reLaunch({ url: './find_home' })
+
+          })
+        } else if (res.cancel) {
+
+        }
+      }
+    })
+  }
+  onShow() {
+    //1.更新用户权限菜单
+    this.getUserInfo()
+    //2.检查未读信息数量
+    http.get('/user/unReadNoticeCount').success(res => {
+      this.notice = res.data[0];
+      this.$apply()
+    })
+    if(this.userInfo.permission.billList || true){ //账单列表权限待配置
+    //3.查询未支付账单数量
+    http.get('/user/unpaidBillCount').success(res => {
+      this.unpaidBillCount = res.data[0].count;
+      this.$apply()
+    })
+  }
+
+  }
+
+
+  onPullDownRefresh() {
+    console.log('onPullDownRefresh')
+    //1.更新用户权限菜单
+    this.getUserInfo()
+    //2.检查未读信息
+    http.get('/user/unReadNoticeCount').success(res => {
+      this.notice = res.data[0];
+      this.$apply()
+    })
+
+    wx.stopPullDownRefresh()
+  }
+
+  getUserInfo() {
+    http.get('/user/userInfo').success(res => {
+      this.$parent.globalData.userInfo = res.data
+      this.$apply()
+    })
+  }
+
+}
+
+</script>
+<style lang="less">
+.copyright {
+  text-align: center;
+  font-size: 26rpx;
+  background: #eee;
+  padding: 20px;
+  color: #aaa;
+}
+
+.userInfo2 {
+  display: flex;
+  justify-content: space-between;
+  font-size: 28rpx;
+}
+
+.userInfo3 {
+  line-height: 50px;
+  view {
+    width: 49%;
+    justify-content: center;
+  }
+}
+
+.nickname {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 28rpx;
+}
+
+.my_num {
+  margin-top: 25rpx;
+  .my_num_view {
+    padding: 30rpx;
+    padding-bottom: 5rpx;
+    border-top: 1px solid #eee;
+  }
+}
+
+.info {
+  padding: 30rpx 0 50rpx 50rpx;
+  border-bottom: 1rpx solid #e5e5e5;
+  image {
+    width: 120rpx;
+    height: 120rpx;
+    border-radius: 100%;
+  }
+  .phone {
+    margin-left: 34rpx;
+  }
+}
+
+.manage {
+  text-align: center;
+  padding: 30rpx 0;
+  .cellItem {
+    flex: 1;
+    padding: 10rpx 0;
+  }
+  .cellItem+.cellItem {
+    border-left: 1rpx solid #e5e5e5;
+  }
+}
+
+.menuContainer {
+  padding: 0 30rpx 0 48rpx;
+  .menuItem {
+    justify-content: space-between;
+    min-height: 100rpx;
+    border-bottom: 1rpx solid #e5e5e5;
+    &:last-child {
+      border-bottom: none;
+    }
+    view.zan-icon {
+      margin-right: 16rpx;
+    }
+    .iconImg {
+      width: 30rpx;
+      height: 30rpx;
+      margin-right: 16rpx;
+    }
+    .icon-arrow-right {
+      margin-left: 16rpx;
+    }
+  }
+}
+
+
+.popup-example--center {
+  border-radius: 4px;
+}
+
+.popup-example--right .zan-popup__container {
+  top: 0;
+  bottom: 0;
+}
+
+.popup-example--left .zan-popup__container {
+  top: 0;
+  bottom: 0;
+}
+
+.popup-example--top .zan-popup__container {
+  left: 0;
+  right: 0;
+  padding: 15px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  font-size: 16px;
+}
+
+.popup-example--top .zan-popup__mask {
+  opacity: 0;
+}
+
+.popup-example--bottom .zan-popup__container {
+  left: 0;
+  right: 0;
+}
+
+</style>

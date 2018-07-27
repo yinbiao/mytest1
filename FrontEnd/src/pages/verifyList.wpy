@@ -1,0 +1,366 @@
+<template>
+  <view class="contain">
+    <repeat for="{{myVerifyList}}" item="item">
+      <view class="zan-panel">
+        <view class="zan-card">
+          <view class="zan-card__thumb" @tap="fullImgs({{item}})">
+            <image class="zan-card__img" src="{{item.busLicenseImage}}" mode="aspectFit"></image>
+          </view>
+          <view class="zan-card__detail">
+            <view class="zan-card__detail-row">
+              <!-- <view class="zan-card__right-col zan-c-black">
+                <view class="zan-c-gray-darker inline">昵称：</view>{{item.nickname}}
+              </view> -->
+              <view class="zan-card__left-col zan-ellipsis--l2">
+                <view class="zan-c-gray-darker inline">姓名：</view>{{item.name || item.nickname}}
+              </view>
+            </view>
+            <view class="zan-card__detail-row zan-c-gray-darker zan-font-bold">
+              <view class="zan-card__left-col zan-c-red">
+                <view class="zan-c-gray-darker inline">电话：</view>{{item.phoneNum}}
+              </view>
+            </view>
+            <view class="zan-card__detail-row">
+              <view class=" zan-ellipsis--l2">
+                <view class="zan-c-gray-darker inline">公司名称：</view>{{item.companyName}}
+              </view>
+              <view class=" zan-ellipsis--l2" wx:if="{{item.disctictOfBusiness}}">
+                <view class="zan-c-gray-darker inline">经营区域：</view>{{item.disctictOfBusiness}}
+              </view>
+              <view class=" zan-ellipsis--l2">
+                <view class="zan-c-gray-darker inline">办公地址：</view>{{item.companyAddress}}
+              </view>
+              <view class=" zan-ellipsis--l2">
+                <view class="zan-c-gray-darker inline">接洽业务员：</view> {{item.platformUserName}}
+              </view>
+              <view class=" zan-ellipsis--l2">
+                <view class="zan-c-gray-darker inline">申请时间：</view> {{item.timestamp}}
+              </view>
+            </view>
+          </view>
+          <view>{{item.busLicenseImage}}</view>
+          <!-- 入驻审核:0初始状态，1申请状态一审审核中，2一审不通过，3一审通过，4二审审核中，5二审不通过，6二审通过  -->
+          <view class="zan-panel" style="padding: 15px;text-align:right;" wx:if="{{item.verified == 1}}">
+            <button class="zan-btn zan-btn--small" @tap="tapValid(2,{{item}})">一审不通过</button>
+            <button class="zan-btn zan-btn--small zan-btn--primary" @tap="tapValid(3,{{item}})">一审通过</button>
+          </view>
+          <view class="zan-panel" style="padding: 15px;text-align:right;" wx:elif="{{item.verified == 4}}">
+            <button class="zan-btn zan-btn--small" @tap="tapValid(5,{{item}})">二审不通过</button>
+            <button class="zan-btn zan-btn--small zan-btn--primary" @tap="tapValid(6,{{item}})">二审通过</button>
+          </view>
+          <view wx:else class="zan-panel" style="padding: 15px;text-align:right;">{{item.verifiedState}}</view>
+        </view>
+      </view>
+    </repeat>
+  </view>
+</template>
+<script>
+import wepy from 'wepy'
+import http from '../utils/http.js'
+import C from '../constant/index.js'
+
+export default class VerifyList extends wepy.page {
+  config = {
+    navigationBarTitleText: '会员审核列表',
+    enablePullDownRefresh: true
+  }
+
+  data = {
+    myVerifyList: []
+  }
+
+  methods = {
+    fullImgs(item) {
+      wx.previewImage({
+        current: '', // 当前显示图片的http链接
+        urls: item.allImgs // 需要预览的图片http链接列表
+      })
+    },
+    tapValid(verified, item) {
+      //verified 0不通过,1通过审核
+      const _this = this;
+      const data = {
+        verified,
+        companyRegisterId: item.userId,
+        companyId: item.id
+      }
+      //入驻审核:0初始状态，1申请状态一审审核中，2一审不通过，3一审通过，4二审审核中，5二审不通过，6二审通过 
+      http.post('/user/verifyRegister', data).success(res => {
+        wx.showModal({
+          title: '提示',
+          content: '操作成功',
+          success: () => { _this.initData.call(_this) }
+        })
+      })
+
+    },
+  }
+  onLoad() {
+    this.initData()
+  }
+  initData() {
+    http.get('/user/verifyList').success(res => {
+      this.myVerifyList = res.data
+
+      // .map(v => {
+      //   v.allImgs = [v.busLicenseImage, v.coparationImg]
+      //   return v
+      // });
+      console.log(this.myVerifyList);
+      this.$apply();
+    });
+  }
+  onPullDownRefresh() {
+    console.log('onPullDownRefresh')
+    wx.stopPullDownRefresh()
+  }
+}
+
+</script>
+<style lang="less">
+.inline {
+  display: inline-block;
+}
+
+.zan-panel {
+  padding-top: 10px;
+}
+
+.contain {
+  height: 100%;
+  background: #f4f4f4;
+}
+
+.home-button {
+  width: 80rpx;
+  height: 80rpx;
+  position: fixed;
+  bottom: 100rpx;
+  right: 40rpx;
+  background-color: #f68954;
+  text-align: center;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 27rpx;
+  line-height: 40rpx;
+  padding: 10rpx;
+}
+
+.couponBagsList {
+  padding: 20rpx;
+  .couponBag {
+    background-color: #fff;
+    margin-bottom: 20rpx;
+    padding: 60rpx 30rpx 30rpx;
+    border-radius: 10rpx;
+    color: #333;
+    .left {
+      width: 90rpx;
+      height: 90rpx;
+      background: url("https://assets.mgzf.com/appimg/e64245f05e092265b5902dceb9edb9a9.png") no-repeat;
+      background-size: cover;
+      flex: none;
+    }
+    .right {
+      margin-left: 30rpx;
+      flex: 1;
+      .title {
+        font-size: 28rpx;
+      }
+      .desc {
+        font-size: 48rpx;
+        line-height: 1;
+        margin-top: 10rpx;
+      }
+    }
+    .checkBtn {
+      width: 100%;
+      height: 80rpx;
+      line-height: 80rpx;
+      font-size: 30rpx;
+      margin-top: 50rpx;
+      border-color: #ee4255;
+      color: #ee4255;
+    }
+    &.disabled {
+      background-color: #b8bbc2;
+      color: #fff;
+      .left {
+        background-image: url("https://assets.mgzf.com/appimg/a29451e36fa6c7b29e9fcb7946526304.png");
+      }
+      .disableImg {
+        width: 130rpx;
+        height: 130rpx;
+      }
+      .hasOverDate {
+        background: url("https://assets.mgzf.com/appimg/3fd82eefe8f211b8d8a61169d51b5ca9.png") no-repeat;
+        background-size: cover;
+      }
+      .hasDisabled {
+        background: url("https://assets.mgzf.com/appimg/0c2bd5d2f65cddaf74be5db603829e72.png") no-repeat;
+        background-size: cover;
+      }
+      .hasUsed {
+        background: url("https://assets.mgzf.com/appimg/af63946e2a37e0be8a82417da9f18356.png") no-repeat;
+        background-size: cover;
+      }
+      .checkBtn {
+        border-color: #dcdcdc;
+        color: #fff;
+      }
+    }
+  }
+}
+
+.couponBagsNone {
+  width: 320rpx;
+  position: fixed;
+  left: 50%;
+  top: 45%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  .noneImage {
+    display: inline-block;
+    width: 160rpx;
+    height: 150rpx;
+    background: url("https://assets.mgzf.com/appimg/99fd4efed536deca3ddaf4cc710f3770.png") no-repeat;
+    background-size: cover;
+  }
+  .noneText {
+    font-size: 30rpx;
+    color: #666666;
+    margin: 40rpx 0;
+  }
+  .noneBtn {
+    height: 68rpx;
+    line-height: 68rpx;
+    width: 100%;
+    font-size: 28rpx;
+    background-color: #F3511D;
+  }
+}
+
+.zan-popup__container {
+  text-align: center;
+}
+
+.zan-btns {
+  margin: 0;
+}
+
+.zan-dialog--container {
+  position: fixed;
+  top: 45%;
+  left: 50%;
+  width: 80%;
+  height: 0;
+  font-size: 16px;
+  overflow: hidden;
+  transition: all .2s linear;
+  border-radius: 4px;
+  background-color: #fff;
+  transform: translate3d(-50%, -50%, 0);
+  color: #333;
+  opacity: 0;
+  z-index: 1
+}
+
+.zan-dialog--mask {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, .6);
+  transition: .3s;
+  display: none;
+  z-index: 1
+}
+
+.zan-dialog__header {
+  padding: 15px 0 0;
+  text-align: center
+}
+
+.zan-dialog__content {
+  position: relative;
+  padding: 15px 20px;
+  line-height: 1.5;
+  min-height: 40px
+}
+
+.zan-dialog__content::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 200%;
+  transform: scale(.5);
+  transform-origin: 0 0;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 0 solid #e5e5e5;
+  border-bottom-width: 1px
+}
+
+.zan-dialog__content--title {
+  color: #999;
+  font-size: 14px
+}
+
+.zan-dialog__footer {
+  overflow: hidden
+}
+
+.zan-dialog__button {
+  line-height: 50px;
+  height: 50px;
+  padding: 0 5px;
+  border-radius: 0;
+  margin-bottom: 0
+}
+
+.zan-dialog__button::after {
+  border-width: 0;
+  border-radius: 0
+}
+
+.zan-dialog--show .zan-dialog--container {
+  opacity: 1;
+  height: auto
+}
+
+.zan-dialog--show .zan-dialog--mask {
+  display: block
+}
+
+.zan-dialog__footer--horizon {
+  display: flex
+}
+
+.zan-dialog__footer--horizon .zan-dialog__button {
+  flex: 1
+}
+
+.zan-dialog__footer--horizon .zan-dialog__button::after {
+  border-right-width: 1px
+}
+
+.zan-dialog__footer--horizon .zan-dialog__button:last-child::after {
+  border-right-width: 0
+}
+
+.zan-dialog__footer--vertical .zan-dialog__button {
+  flex: 1
+}
+
+.zan-dialog__footer--vertical .zan-dialog__button::after {
+  border-bottom-width: 1px
+}
+
+.zan-dialog__footer--vertical .zan-dialog__button:last-child::after {
+  border-bottom-width: 0
+}
+
+</style>

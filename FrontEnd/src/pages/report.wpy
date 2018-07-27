@@ -1,0 +1,554 @@
+<template>
+  <view class="container">
+    <!-- Field 基础用法 -->
+    <!-- <view class="zan-panel-title">基础用法</view> -->
+    <view class="zan-panel">
+      <view class="zan-cell zan-field wrapped">
+        <view class="zan-cell__hd zan-field__title">客户姓名
+          <text class='red'>*</text>
+        </view>
+        <input type="text" name="" disabled="" focus="" value="{{customerName}}" placeholder="请输入真实姓名" class="zan-field__input zan-cell__bd" placeholder-class="zan-field__placeholder" bindinput="getCustomerName" />
+        <view class="_sex">
+          <radio-group class="radio-group" bindchange="genderChange">
+            <label class="radio" wx:for="{{sexItems}}">
+              <radio value="{{item.value}}" checked="{{item.checked}}" />{{item.name}}
+            </label>
+          </radio-group>
+        </view>
+      </view>
+      <view class="zan-cell zan-field wrapped">
+        <view class="zan-cell__hd zan-field__title">手机号码
+          <text class='red'>*</text>
+        </view>
+        <input type="text" name="" disabled="" focus="" value="{{customerPhone}}" placeholder="请输入手机号码" class="zan-field__input zan-cell__bd" placeholder-class="zan-field__placeholder" bindinput="getCustomerPhone" />
+      </view>
+      <!-- <view class="zan-cell zan-field wrapped">
+      <view class="zan-cell__hd zan-field__title">报备楼盘</view>
+      <input
+        type="text"
+        name=""
+        disabled=""
+        focus=""
+        value=""
+        placeholder="报备楼盘"
+        class="zan-field__input zan-cell__bd"
+        placeholder-class="zan-field__placeholder"
+        bindinput=""
+        bindfocus=""
+        bindblur=""
+        data-component-id=""/>
+    </view> -->
+      <picker mode="date" bindchange="bindDateChange">
+        <view class="zan-cell zan-cell--access">
+          <view class="zan-cell__bd">看房时间
+            <text class='red'>*</text>
+          </view>
+          <view>{{chooseTime}}</view>
+          <view class="zan-cell__ft"></view>
+        </view>
+        <view class='border-bottom'></view>
+      </picker>
+      <view class="zan-cell zan-cell--access" @tap="getNumOfLookRoom">
+        <view class="zan-cell__bd ">看房人数
+          <text class='red'>*</text>
+        </view>
+        <view>{{numOfLookRoom}}</view>
+        <view class="zan-cell__ft"></view>
+      </view>
+      <!-- 班车或者自驾 ，这里不全交互和数据-->
+      <radio-group class="radio-group" bindchange="radioChange">
+        <view class="zan-panel-title zan-c-black">
+          <label>
+            <radio value="0" checked="true" /> 班车接送 </label>
+          <label>
+            <radio value="1" checked="" /> 客户自驾</label>
+        </view>
+      </radio-group>
+      <view class="zan-panel" wx:if="{{selectIndex ==0}}">
+        <!-- <picker mode="time" value="{{date}}" bindchange="busTimeChange"> -->
+        <view class="zan-cell zan-cell--access">
+          <view class="zan-cell__bd">出发时间</view>
+          <picker mode="date" bindchange="busTime1Change" style='flex:1'>
+            <view>
+              {{busTime1||'选择日期'}}
+            </view>
+          </picker>
+          <picker mode="time" bindchange="busTime2Change" style='flex:1'>
+            <view>
+              {{busTime2||'选择时间'}}
+            </view>
+          </picker>
+          <!-- <view class="zan-cell__ft"></view> -->
+        </view>
+        <view class='border-bottom'></view>
+        <!-- </picker> -->
+        <view class="zan-cell">
+          <view class="zan-cell__hd zan-field__title">班车接送地址</view>
+          <view>
+            <input placeholder="班车接送地址" bindinput="busAddressChange" />
+          </view>
+        </view>
+        <view class='border-bottom'></view>
+      </view>
+      <view class="zan-panel" wx:if="{{selectIndex ==1}}">
+        <view class="zan-cell">
+          <view>
+            <input placeholder="自驾车牌号" bindinput="carNumberChange" />
+          </view>
+        </view>
+      </view>
+      <view class="zan-panel-title zan-c-black">备注
+        <text class='red'>*</text>
+      </view>
+      <view class="zan-panel" style='z-index: 0'>
+        <view class="zan-cell">
+          <view wx:if="{{textareaShow}}">
+            <textarea placeholder="请输入备注" bindinput="getRemarks"></textarea>
+          </view>
+        </view>
+      </view>
+      <view class="zan-btns bottom-btn">
+        <checkbox checked="true" />
+        <text class="zan-c-gray">报备及判客</text>
+        <text class="mg-color-orange" @tap="goRuleNote">规则说明</text>
+        <button class="zan-btn zan-btn--primary" @tap="addRapid">添加报备</button>
+      </view>
+    </view>
+    <view class="popup-example--bottom zan-popup zan-popup--bottom {{ showNumOfLookRoomPopup ? 'zan-popup--show' : ''}}">
+      <view class="zan-popup__mask" catchtap="toggleNumOfLookRoom"></view>
+      <view class="zan-popup__container" style="width:100%;">
+        <repeat for="{{numOfLookRoomList}}" key="index">
+          <view class="zan-btns" catchtap="toggleNumOfLookRoom({{item}})">
+            <button class="zan-btn">
+              {{item.num}}
+            </button>
+          </view>
+        </repeat>
+      </view>
+    </view>
+  </view>
+</template>
+<script>
+import wepy from 'wepy'
+import http from '../utils/http.js'
+export default class Report extends wepy.page {
+  config = {
+    navigationBarTitleText: '添加报备',
+    enablePullDownRefresh: true,
+    backgroundTextStyle: 'dark',
+    backgroundColor: '#ffffff'
+  }
+
+  components = {}
+
+  data = {
+    textareaShow: true,
+    selectIndex: 0,
+    buildingId: '',
+    customerName: '',
+    customerGender: 1,
+    customerPhone: '',
+    showTime: '',
+    peopleCount: 1,
+    remarks: '',
+    buildingId: '',
+    carNumber: '',
+    busAddress: '',
+    busTime: '',
+    targetorId: '',
+
+    busTime1:'',
+    busTime2:'',
+
+    sexItems: [
+      { name: '男', value: 1 },
+      { name: '女', value: 2, checked: 'true' }
+    ],
+    chooseTime: '',
+    numOfLookRoom: 0,
+    showNumOfLookRoomPopup: false,
+    numOfLookRoomList: [{
+        num: '1人',
+        value: '1'
+      },
+      {
+        num: '2人',
+        value: '2'
+      },
+      {
+        num: '3人',
+        value: '3'
+      },
+      {
+        num: '3人以上',
+        value: '4'
+      }
+    ]
+  }
+
+  computed = {
+    // choosedCity () {
+    //   return this.$parent.globalData.choosedCity
+    // }
+  }
+
+  watch = {
+    // choosedCity (newValue, oldValue) {
+    //   this.fetchAllData()
+    // }
+  }
+
+  methods = {
+    busAddressChange(e) {
+      this.busAddress = e.detail.value
+    },
+    carNumberChange(e) {
+      this.carNumber = e.detail.value
+    },
+    busTime1Change(e) {
+      this.busTime1 = e.detail.value
+      this.busTime=this.busTime1+' '+this.busTime2
+    },
+    busTime2Change(e) {
+      this.busTime2 = e.detail.value
+      this.busTime=this.busTime1+' '+this.busTime2
+    },
+    genderChange(e) {
+      this.customerGender = e.detail.value
+    },
+    radioChange(e) {
+      this.selectIndex = e.detail.value
+      console.error(e.detail.value)
+      this.$apply()
+    },
+    getCustomerName(e) {
+      this.customerName = e.detail.value
+    },
+    getCustomerPhone(e) {
+      this.customerPhone = e.detail.value
+    },
+    getRemarks(e) {
+      this.remarks = e.detail.value
+    },
+    addRapid() {
+      //
+      let _params = {
+        buildingId: this.buildingId,
+        targetorId: this.targetorId,
+        customerName: this.customerName,
+        customerGender: this.customerGender,
+        customerPhone: this.customerPhone,
+        showTime: this.chooseTime,
+        peopleCount: this.numOfLookRoom,
+        remarks: this.remarks,
+        carNumber: this.carNumber,
+        busAddress: this.busAddress,
+        busTime: this.busTime,
+
+      }
+
+      http.post('/order/report', _params).success((res) => {
+        wx.showModal({
+          title: '提示',
+          content: '添加报备成功',
+          success: function(res) {
+            wx.navigateBack({
+              delta: 1
+            })
+            if (res.confirm) {
+              console.log('用户点击确定')
+            } else if (res.cancel) {
+              console.log('用户点击取消')
+            }
+          }
+        })
+
+        //          this.$navigate('./find_buildingList')
+      })
+
+
+
+      //this.$navigate('./my_customer')
+    },
+    bindDateChange: function(e) {
+      console.log('picker发送选择改变，携带值为', e.detail.value)
+      this.chooseTime = e.detail.value
+    },
+    getNumOfLookRoom() {
+      this.showNumOfLookRoomPopup = true;
+      this.textareaShow = false
+    },
+    toggleNumOfLookRoom(numOfLookRoom) {
+      this.showNumOfLookRoomPopup = false;
+      this.numOfLookRoom = numOfLookRoom.num;
+      this.textareaShow = true
+    },
+    goRuleNote() {
+      this.$navigate('./rule_note?buildingId=' + this.buildingId)
+    }
+  }
+
+  onLoad(params) {
+    this.buildingId = params.buildingId
+    this.targetorId = params.userId
+    console.log('params.buildingId=>', params.buildingId)
+  }
+  onPullDownRefresh() {
+    console.log('onPullDownRefresh')
+    wx.stopPullDownRefresh()
+  }
+}
+
+</script>
+<style lang="less">
+.border-bottom {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 200%;
+  transform: scale(0.5);
+  transform-origin: 0 0;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 0 solid #e5e5e5;
+  border-bottom-width: 1.5px;
+  left: 15px;
+  right: 0;
+}
+
+.bottom-btn {
+  text-align: center;
+  margin-top: 80rpx!important;
+  button {
+    margin-top: 50rpx;
+  }
+}
+
+textarea {
+  height: 60px!important;
+}
+
+.zan-popup {
+  z-index: 9999;
+}
+
+._sex {
+  margin-right: 20rpx;
+}
+
+.right {
+  float: right;
+}
+
+.zan-btns {
+  margin: 0;
+}
+
+.zan-cell {
+  position: relative;
+  padding: 12px 15px;
+  display: flex;
+  align-items: center;
+  line-height: 1.4;
+  font-size: 14px
+}
+
+.zan-cell::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 200%;
+  transform: scale(.5);
+  transform-origin: 0 0;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 0 solid #e5e5e5;
+  border-bottom-width: 1px;
+  left: 15px;
+  right: 0
+}
+
+.zan-cell__icon {
+  margin-right: 5px
+}
+
+.zan-cell__bd {
+  flex: 1
+}
+
+.zan-cell__text {
+  line-height: 24px;
+  font-size: 14px
+}
+
+.zan-cell__desc {
+  line-height: 1.2;
+  font-size: 12px;
+  color: #666
+}
+
+.zan-cell__ft {
+  position: relative;
+  text-align: right;
+  color: #666
+}
+
+.zan-cell__no-pading {
+  padding: 0
+}
+
+.zan-cell__no-pading .zan-cell__bd_padding {
+  padding: 12px 0 12px 15px
+}
+
+.zan-cell__no-pading .zan-cell__bd_padding .zan-form__input {
+  height: 26px
+}
+
+.zan-cell__no-pading .zan-cell__ft_padding {
+  padding: 12px 15px 12px 0
+}
+
+.zan-cell--last-child::after,
+.zan-cell:last-child::after {
+  display: none
+}
+
+.zan-cell--access .zan-cell__ft {
+  padding-right: 13px
+}
+
+.zan-cell--access .zan-cell__ft::after {
+  position: absolute;
+  top: 50%;
+  right: 2px;
+  content: " ";
+  display: inline-block;
+  height: 6px;
+  width: 6px;
+  border-width: 2px 2px 0 0;
+  border-color: #c8c8c8;
+  border-style: solid;
+  transform: translateY(-50%) matrix(.71, .71, -.71, .71, 0, 0)
+}
+
+.zan-cell--switch {
+  padding-top: 6px;
+  padding-bottom: 6px
+}
+
+.zan-field {
+  padding: 7px 15px;
+  color: #333
+}
+
+.zan-field--wrapped {
+  margin: 0 15px;
+  background-color: #fff
+}
+
+.zan-field--wrapped::after {
+  left: 0;
+  border-width: 1px;
+  border-radius: 4px
+}
+
+.zan-field.zan-field--wrapped::after {
+  display: block
+}
+
+.zan-field--wrapped+.zan-field--wrapped {
+  margin-top: 10px
+}
+
+.zan-field--error {
+  color: #f40
+}
+
+.zan-field--wrapped.zan-field--error::after {
+  border-color: #f40
+}
+
+.zan-field__title {
+  color: #333;
+  min-width: 65px;
+  padding-right: 10px
+}
+
+.zan-field__input {
+  flex: 1;
+  line-height: 1.6;
+  padding: 4px 0;
+  min-height: 22px;
+  height: auto;
+  font-size: 14px
+}
+
+.zan-field__placeholder {
+  font-size: 14px
+}
+
+.zan-field__input--right {
+  text-align: right
+}
+
+.zan-stepper {
+  color: #666
+}
+
+.zan-stepper view {
+  display: inline-block;
+  line-height: 20px;
+  padding: 5px 0;
+  text-align: center;
+  min-width: 40px;
+  box-sizing: border-box;
+  vertical-align: middle;
+  font-size: 12px;
+  border: 1rpx solid #999
+}
+
+.zan-stepper .zan-stepper__minus {
+  border-right: none;
+  border-radius: 2px 0 0 2px
+}
+
+.zan-stepper .zan-stepper__text {
+  border: 1rpx solid #999;
+  display: inline-block;
+  text-align: center;
+  vertical-align: middle;
+  height: 30px;
+  width: 40px;
+  min-height: auto;
+  font-size: 12px;
+  line-height: 30px
+}
+
+.zan-stepper .zan-stepper__plus {
+  border-left: none;
+  border-radius: 0 2px 2px 0
+}
+
+.zan-stepper .zan-stepper--disabled {
+  background: #f8f8f8;
+  color: #bbb;
+  border-color: #e8e8e8
+}
+
+.zan-stepper--small view {
+  min-width: 36px;
+  line-height: 18px
+}
+
+.zan-stepper--small .zan-stepper__text {
+  width: 36px;
+  line-height: 28px;
+  height: 28px
+}
+
+</style>

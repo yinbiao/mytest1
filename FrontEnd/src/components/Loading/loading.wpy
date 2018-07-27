@@ -1,0 +1,35 @@
+<template>
+  <view
+    wx:if="{{visible}}"
+    class="loading mg-font-28 mg-lightgray">
+    <view class="loading-content">
+      <Spinner></Spinner>
+      <slot name="content"></slot>
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import Spinner from './spinner'
+  export default class Loading extends wepy.component {
+    props = {
+      visible: {
+        type: Boolean,
+        default: true
+      }
+    }
+    components = {
+      Spinner
+    }
+  }
+</script>
+<style lang="less">
+.loading {
+  padding: 80rpx 0;
+}
+.loading-content{
+  text-align: center;
+  line-height: 1;
+}
+</style>

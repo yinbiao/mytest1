@@ -1,0 +1,235 @@
+<template>
+  <view class="room-info">
+    <view class="titleLine">
+      <view class="room-name mg-color-dark mg-bold">
+        <view class="zan-icon zan-icon-wap-home zan-c-green"></view>（宝山杨行）万业紫宸</view>
+      <view class="tags">
+        <text class="tag-label label-type2">住宅</text>
+        <text class="tag-label label-type3">在售</text>
+        <!-- <text class="tag-label label-type4">在售22</text> -->
+      </view>
+    </view>
+    <view class="mg-font-small mg-color-light">客户 10 | 带看 5 | 成交 1</view>
+    <view class="sub-title">
+      <view class="pay-method">
+        均价：
+         <view class="price">
+          40000元/m2
+        </view>
+      </view>
+    </view>
+
+    <view class="sub-title">
+      <view class="pay-method">
+        总价范围：
+        <view class="price">
+          562～598万
+        </view>
+      </view>
+    </view>
+    <view>
+
+    <view class="sub-title pay-method room-address" @tap="gotoLocation">
+      <view>楼盘地址：</view>
+      <view class="zan-c-blue">
+        宝山区-江杨北路1568号
+      </view>
+      <view class="icon-arrow-right"></view>
+    </view>
+    
+    <!-- <view class="sub-title pay-method room-address">
+      <view>开盘时间：</view>
+      <view class="zan-c-blue">
+        2018年11月11日
+      </view>
+      <view class="icon-arrow-right"></view>
+    </view> -->
+
+    <view class="sub-title pay-method room-address">
+      <view>交房时间：</view>
+      <view class="zan-c-black">
+        2018年11月11日
+      </view>
+    </view>
+    ---佣金计划未登录不能查看
+    <view class="sub-title pay-method room-address">
+      <view>佣金计划：</view>
+      <view class="zan-c-red">
+        3.5万/套
+      </view>
+    </view>
+
+    <!-- <view class="sub-title pay-method room-address">
+      <view>合作时间：</view>
+      <view class="zan-c-red">
+        2018年11月11日
+      </view>
+      到
+      <view class="zan-c-red">
+        20120年11月11日
+      </view>
+    </view> -->
+  </view>
+</view>
+  
+  
+</template>
+<script>
+  import wepy from 'wepy'
+  import util from '../../utils/util'
+
+  export default class RoomTitle extends wepy.component {
+    props = {
+      roomInfo: Object,
+    }
+    methods = {
+      
+      gotoLocation () {
+        // if (this.locationInfo.lat) {
+          // let point = util.BdmapEncryptToMapabc(this.locationInfo.lat, this.locationInfo.lng)
+          let point = util.BdmapEncryptToMapabc(39.915119, 116.403963)
+          wx.openLocation({
+            latitude: point.lat,
+            longitude: point.lng,
+            name: '天安门',
+            scale: 28
+          })
+        // }
+      }
+    }
+    data = {
+     
+    }
+
+    onLoad() {
+    }
+  }
+</script>
+<style lang="less">
+  .room-info {
+    background-color: #fff;
+    padding: 40rpx;
+    .titleLine {
+      display: flex;
+      justify-content: space-between;
+      padding-bottom: 10rpx;
+    }
+    .room-name {
+      font-size: 36rpx;
+      line-height: 55rpx;
+    }
+    .tags {
+      margin: 6rpx 0 0 10rpx;
+    }
+    // 月付下架
+    /*.monthly-label {*/
+      /*margin-top: 3rpx;*/
+      /*display: inline-block;*/
+      /*padding: 6rpx 10rpx;*/
+      /*font-size: 20rpx;*/
+      /*border-radius: 10rpx;*/
+      /*margin-left: 10rpx;*/
+    /*}*/
+
+    .label-type2 {
+      background-color: #f6e9fe;
+      color: #a323f2;
+    }
+    .label-type3 {
+      background-color: #e5f1ff;
+      color: #007aff;
+    }
+    .label-type4 {
+      background-color: #e7f5fe;
+      color: #189bfa;
+    }
+    .label-type5 {
+      background-color: #dff3c9;
+      color: #92cd59;
+    }
+    .label-payment-monthly {
+      background-color: #ffeacc;
+      color: #ff7200;
+    }
+    .gray-line {
+      padding:20rpx 10rpx;
+      margin-bottom: 20rpx;
+      border-bottom:1px solid #ccc;
+    }
+    .price {
+      color: #f65000;
+      font-size: 30rpx;
+      display: inline;
+    }
+    .price-tag {
+      color: #f65000;
+      font-size: 24rpx;
+      display: inline;
+      view {
+        display: inline-block;
+      }
+    }
+    .pay-method {
+      font-size: 30rpx;
+      color: #666;
+      margin-left: 10rpx;
+    }
+    .room-address{
+      view{
+        display: inline-block;
+      }
+      .icon-arrow-right{
+        float: right;
+      }
+    }
+    .service-charge {
+      font-size: 24rpx;
+      color: #666;
+    }
+    .charge-detail {
+      margin-top: 12rpx;
+      float: right;
+      font-size: 28rpx;
+      color: #f65000;
+      padding-left: 10rpx;
+    }
+    .sub-title {
+      margin-top: 15rpx;
+    }
+    .room-select {
+      margin-top: 44rpx;
+      padding: 38rpx 20rpx;
+      border: 1rpx solid #e5e5e5;
+      border-radius: 8rpx;
+      display: flex;
+      justify-content: space-between;
+      .room-arrow {
+        display: flex;
+      }
+      .icon-arrow-right {
+        margin-top:8rpx;
+      }
+    }
+  }
+  .detail-title {
+    display: flex;
+    justify-content: space-between;
+    font-size: 30rpx;
+  }
+  .detail-text {
+    margin-top: 20rpx;
+    font-size: 26rpx;
+    color: #666;
+    text-align: justify;
+  }
+  .detail-deposit {
+    margin-top: 20rpx;
+    padding: 20rpx 20rpx;
+    background-color: #f9f9f9;
+    color: #666;
+    font-size: 26rpx;
+    view {
+      line-height: 1.5;
+    }
+  }
+</style>

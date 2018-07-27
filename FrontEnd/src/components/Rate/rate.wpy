@@ -1,0 +1,35 @@
+<template>
+  <view>
+    <repeat for="{{score}}" index="index3" key="index3" item="star">
+      <view class="{{(index3+1) <= star ? 'star star-active' : 'star'}}"></view>
+    </repeat>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+export default class Rate extends wepy.component {
+  props = {
+    score: {
+      type: Array,
+      default: []
+    }
+  }
+}
+</script>
+
+<style lang="less">
+.star {
+  width: 20rpx;
+  height: 20rpx;
+  background-image: url(https://assets.mgzf.com/h5img/223a8e2dbb46311c8de99461445ba0bb.png);
+  display: inline-block;
+  line-height: 20rpx;
+  background-size: contain;
+  background-repeat: no-repeat;
+  margin-right:8rpx;
+}
+.star-active{
+  background-image: url(https://assets.mgzf.com/h5img/f13856608a4af654f4862f8d293c5879.png);
+}
+</style>

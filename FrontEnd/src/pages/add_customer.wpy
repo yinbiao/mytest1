@@ -1,0 +1,784 @@
+<template>
+  <view class="container">
+    <!-- Field 基础用法 -->
+    <view class="zan-panel-title">添加客户</view>
+    <view class="zan-panel">
+      <view class="zan-cell zan-field wrapped">
+        <view class="zan-cell__hd zan-field__title my-gray">客户姓名
+          <text class='red'>*</text>
+        </view>
+        <input type="text" placeholder="请输入真实姓名" class="zan-field__input zan-cell__bd" placeholder-class="zan-field__placeholder" bindinput="fetchData('customerName')" data-component-id="" />
+        <view class="_sex">
+          <radio-group class="radio-group" bindchange="fetchData('gender')">
+            <label class="radio" wx:for="{{genderList}}">
+              <radio value="{{item.value}}" checked="{{index == 0}}" />{{item.name}}
+            </label>
+          </radio-group>
+        </view>
+      </view>
+      <view class="zan-cell zan-field wrapped">
+        <view class="zan-cell__hd zan-field__title my-gray">手机号码</view>
+        <input type="text" placeholder="请输入手机号码" class="zan-field__input zan-cell__bd" placeholder-class="zan-field__placeholder" bindinput="fetchData('phone')" data-component-id="" />
+      </view>
+      <!-- <view class="zan-panel-title">关联客户
+        <text class="zan-icon zan-icon-add-o" style="color:#0b4;"></text>
+      </view>
+ -->
+      <view class="zan-panel-title">客户需求</view>
+      <view class="zan-panel">
+        <view class="zan-cell zan-cell--access">
+          <radio-group class="radio-group" bindchange="fetchData('handsType')">
+            <label class="radio" wx:for="{{handsTypeList}}">
+              <radio value="{{item.type}}" checked="{{item.checked}}" />{{item.name}}
+            </label>
+          </radio-group>
+        </view>
+        <view class="zan-cell zan-cell--access" @tap="tapShowPicker('showDistrict')">
+          <view class="zan-cell__bd my-gray">
+            <text class="zan-icon zan-icon-location"></text> 目标区域
+            <text class='red'>*</text>
+          </view>
+          <view class="zan-cell__ft"></view>
+        </view>
+        <!-- 已经选择的目标区域 -->
+        <view class="my-choose-view" wx:if="{{chooseConfirmItem.districtNames.length}}">
+          <repeat for="{{chooseConfirmItem.districtNames}}" key="index">
+            <view class="view-list">
+              <view class="my-left">{{chooseConfirmItem.cityName}} {{item}}</view>
+              <view class="my-right" @tap="delDistrict({{index}})">
+                <text class="zan-icon zan-icon-close zan-c-red"></text>
+              </view>
+            </view>
+          </repeat>
+        </view>
+        <view class="zan-cell zan-cell--access" @tap="tapShowPicker('showSubwayPopup')">
+          <view class="zan-cell__bd my-gray">
+            <text class="zan-icon zan-icon-logistics"></text> 地铁线</view>
+          <view class="zan-cell__ft"></view>
+        </view>
+        <!-- 已选地铁线 -->
+        <view class="my-choose-view" wx:if="{{chooseConfirmItem.subways.length}}">
+          <repeat for="{{chooseConfirmItem.subways}}" key="index">
+            <view class="view-list">
+              <view class="my-left">{{item}}号线</view>
+              <view class="my-right" @tap="delSubway({{index}})">
+                <text class="zan-icon zan-icon-close zan-c-red"></text>
+              </view>
+            </view>
+          </repeat>
+        </view>
+        <view class="zan-cell zan-cell--access" @tap="tapShowPicker('showPropertyTypePopup')">
+          <view class="zan-cell__bd my-gray">
+            <text class="zan-icon zan-icon-shop"></text> 请选择物业类型
+            <text class='red'>*</text>
+          </view>
+          <view>{{chooseConfirmItem.propertyName}}</view>
+          <view class="zan-cell__ft"></view>
+        </view>
+        <view class="zan-cell zan-cell--access" @tap="tapShowPicker('showHouseTypePopup')">
+          <view class="zan-cell__bd my-gray">
+            <text class="zan-icon zan-icon-home"></text> 请选择户型
+            <text class='red'>*</text>
+          </view>
+          <view>{{chooseConfirmItem.houseTypeName}}</view>
+          <view class="zan-cell__ft"></view>
+        </view>
+        <view class="zan-cell zan-cell--access" @tap="tapShowPicker('showbudgetRangePopup')">
+          <view class="zan-cell__bd my-gray">
+            <text class="zan-icon zan-icon-gold-coin"></text> 请选择预算范围
+            <text class='red'>*</text>
+          </view>
+          <view>{{chooseConfirmItem.budget}}</view>
+          <view class="zan-cell__ft"></view>
+        </view>
+        <view class="zan-cell zan-cell--access" @tap="tapShowPicker('showdirectionalBuildingPopup')">
+          <view class="zan-cell__bd my-gray">
+            <text class="zan-icon zan-icon-exchange-record"></text> 定向房源（只针对意向楼盘定向带看）</view>
+          <view class="zan-cell__ft"></view>
+        </view>
+        <!-- 已选定向房源 -->
+        <view class="my-choose-view" wx:if="{{chooseConfirmItem.directionalBuilding.length}}">
+          <repeat for="{{chooseConfirmItem.directionalBuilding}}" key="index">
+            <view class="view-list">
+              <view class="my-left">{{item.name}}</view>
+              <view class="my-right" @tap="delDirectBuilding({{index}})">
+                <text class="zan-icon zan-icon-close zan-c-red"></text>
+              </view>
+            </view>
+          </repeat>
+        </view>
+        <view class="zan-cell zan-cell--access" @tap="tapShowPicker('showEmergencyDegreePopup')">
+          <view class="zan-cell__bd my-gray">
+            <text class="zan-icon zan-icon-clock"></text> 客户购房紧急程度
+            <text class='red'>*</text>
+          </view>
+          <view>{{chooseConfirmItem.degreeName}}</view>
+          <view class="zan-cell__ft"></view>
+        </view>
+        <picker mode="date" value="{{date}}" bindchange="fetchData('appointment')" style="width:100%;">
+          <view class="zan-cell zan-cell--access">
+            <view class="zan-cell__bd my-gray">
+              <text class="zan-icon zan-icon-pending-evaluate"></text> 预约带看时间
+              <text class='red'>*</text>
+            </view>
+            <view>{{chooseConfirmItem.appointment}}</view>
+            <view class="zan-cell__ft"></view>
+          </view>
+        </picker>
+      </view>
+      <view class="zan-panel-title">备注
+        <text class='red'>*</text>（对客户细节描述更容易提高成交率）</view>
+      <view class="zan-panel">
+        <view class="zan-cell">
+          <view>
+            <input placeholder="" bindinput="fetchData('remarks')"></input>
+          </view>
+        </view>
+        <view style="padding:15px 12px;color:red;">
+          <view>注意</view>
+          <view>1.请查询以上客户电话号码是否已经在售楼处登记过。</view>
+          <view>2.请在售楼处报备以上电话号码再抢单。</view>
+        </view>
+        <view class="zan-btns" @tap="customSubmit">
+          <button class="zan-btn zan-btn--primary">提交需求</button>
+        </view>
+      </view>
+    </view>
+    <!-- 物业类型 -->
+    <view class="popup-example--bottom zan-popup zan-popup--bottom {{ showPropertyTypePopup ? 'zan-popup--show' : ''}}">
+      <view class="zan-popup__mask"></view>
+      <view class="zan-popup__container" style="width:100%;">
+        <repeat for="{{propertyTypeList}}" key="index">
+          <view class="zan-btns" catchtap="togglePropertyType({{item}})">
+            <button class="zan-btn">
+              {{item.name}}
+            </button>
+          </view>
+        </repeat>
+      </view>
+    </view>
+    <!-- 户型 -->
+    <view class="popup-example--bottom zan-popup zan-popup--bottom {{ showHouseTypePopup ? 'zan-popup--show' : ''}}">
+      <view class="zan-popup__mask"></view>
+      <view class="zan-popup__container" style="width:100%;">
+        <repeat for="{{houseTypeList}}" key="index">
+          <view class="zan-btns" catchtap="toggleHouseType({{item}})">
+            <button class="zan-btn">
+              {{item.name}}
+            </button>
+          </view>
+        </repeat>
+      </view>
+    </view>
+    <!-- 紧急程度 -->
+    <view class="popup-example--bottom zan-popup zan-popup--bottom {{ showEmergencyDegreePopup ? 'zan-popup--show' : ''}}">
+      <view class="zan-popup__mask" catchtap="toggleEmergencyDegree"></view>
+      <view class="zan-popup__container" style="width:100%;">
+        <repeat for="{{emergencyDegreeList}}" key="index">
+          <view class="zan-btns" catchtap="toggleEmergencyDegree({{item}})">
+            <button class="zan-btn">
+              {{item.degreeName}}
+            </button>
+          </view>
+        </repeat>
+      </view>
+    </view>
+    <!-- 预算范围 -->
+    <view class="popup-example--bottom zan-popup zan-popup--bottom {{ showbudgetRangePopup ? 'zan-popup--show' : ''}}">
+      <view class="zan-popup__mask"></view>
+      <view class="zan-popup__container" style="width:100%;">
+        <repeat for="{{budgetRangeList}}" key="index">
+          <view class="zan-btns" catchtap="toggleBudgetRange({{item}})">
+            <button class="zan-btn">
+              {{item.name}}
+            </button>
+          </view>
+        </repeat>
+      </view>
+    </view>
+    <!-- 地铁线 -->
+    <view class="zan-dialog {{ showSubwayPopup ? 'zan-dialog--show' : '' }}">
+      <view class="zan-dialog--mask"></view>
+      <view class="zan-dialog--container">
+        <view class="zan-dialog__content zan-dialog__content--title my-dialog-content" style="max-height:300px;overflow:scroll;">
+          <checkbox-group bindchange="fetchData('subways')">
+            <label class="checkbox" wx:for="{{subwayList}}">
+              <checkbox value="{{item.name}}" checked="{{item.checked}}" />{{item.value}}
+            </label>
+          </checkbox-group>
+        </view>
+        <view class="zan-dialog__footer zan-dialog__footer--horizon" style="border-top:1px solid #eee;">
+          <block>
+            <button class="zan-dialog__button zan-btn" @tap="cancelEdit">取消</button>
+          </block>
+          <block>
+            <button class="zan-dialog__button zan-btn my-green" @tap="confirmSubWayChoose">确定</button>
+          </block>
+        </view>
+      </view>
+    </view>
+    <!-- 定向房源列表 -->
+    <view class="zan-dialog {{ showdirectionalBuildingPopup ? 'zan-dialog--show' : '' }}">
+      <view class="zan-dialog--mask"></view>
+      <view class="zan-dialog--container">
+        <scroll-view style="height:700rpx;" scroll-y class="zan-dialog__content zan-dialog__content--title my-dialog-content">
+          <checkbox-group bindchange="checkboxBuildingChange">
+            <label class="checkbox" wx:for="{{directionalBuildingItem}}">
+              <checkbox value="{{index}}" checked="{{item.checked}}" />{{item.name}}
+            </label>
+          </checkbox-group>
+        </scroll-view>
+        <view class="zan-dialog__footer zan-dialog__footer--horizon">
+          <block>
+            <button class="zan-dialog__button zan-btn" @tap="cancelEdit">取消</button>
+          </block>
+          <block>
+            <button class="zan-dialog__button zan-btn my-green" @tap="confirmBuildingChoose">确定</button>
+          </block>
+        </view>
+      </view>
+    </view>
+    <!-- 目标区域 -->
+    <view class="{{ showDistrict ? 'showChoosedGeo' : 'hideChoosedGeo' }}">
+      <!-- <view class="zan-dialog--mask"></view>
+      <view class="zan-dialog--container" style="margin-top:35px;"> -->
+      <!-- <view class="zan-dialog__content zan-dialog__content--title my-dialog-content">
+          <checkbox-group bindchange="checkboxDistrictChange">
+            <label class="checkbox" wx:for="{{districtItem}}">
+              <checkbox value="{{item.name}}" checked="{{item.checked}}"/>{{item.name}}
+            </label>
+          </checkbox-group>
+        </view> -->
+      <ChooseGeoMultiple @choosedGeo="choosedGeo">
+        <!--  <view class="zan-dialog__footer zan-dialog__footer--horizon">
+          <block>
+            <button class="zan-dialog__button zan-btn" @tap="cancelEdit">取消</button>
+          </block>
+          <block>
+            <button class="zan-dialog__button zan-btn my-green" @tap="confirmDistrictChoose">确定</button>
+          </block>
+        </view> -->
+        <!-- </view> -->
+    </view>
+  </view>
+</template>
+<script>
+import wepy from 'wepy'
+import http from '../utils/http.js'
+import ChooseGeoMultiple from '../components/chooseGeoMultiple'
+import { genderList, subwayList, emergencyDegreeList, budgetRangeList, houseTypeList, propertyTypeList, handsTypeList } from '../constant/index.js'
+
+export default class AddCustomer extends wepy.page {
+  config = {
+    navigationBarTitleText: '发布新客户',
+    enablePullDownRefresh: true,
+    backgroundTextStyle: 'dark',
+    backgroundColor: '#ffffff'
+  }
+
+  components = {
+    ChooseGeoMultiple
+  }
+
+  data = {
+    chooseConfirmItem: {
+      handsType: '', // 发布房源类型，新房/二手房
+      propertyName: '', // 选中物业类型名字
+      propertyType: '', // 选中物业类型type
+      houseTypeName: '', // 选中户型名字
+      houseType: '', // 选中户型type
+      budget: '', // 选中预算范围
+      budgetMin: '', // 选中预算范围 最低
+      budgetMax: '', // 选中预算范围 最高
+      appointment: '', // 选中看房时间
+      subways: [], // 选中地铁线
+      directionalBuilding: [], // 选中定向房源
+      degreeName: '', // 选中紧急程度名字
+      degreeType: '', // 选中紧急程度type,
+      provinceId: '',
+      cityId: '',
+      districtIds: '',
+      provinceName: '',
+      cityName: '',
+      districtNames: '',
+      customerName: '', // 客户名字
+      phone: '', // 手机号码
+      remarks: '',
+      gender: 1
+    },
+
+    genderList,
+    handsTypeList, //新旧房源
+    propertyTypeList, //物业类型
+    houseTypeList, //户型
+    budgetRangeList, //预算范围
+    directionalBuildingItem: [], //定向房源，取特定
+    subwayList, //地铁线
+    emergencyDegreeList, //紧急程度
+
+    showPropertyTypePopup: false,
+    showHouseTypePopup: false,
+    showbudgetRangePopup: false,
+    showdirectionalBuildingPopup: false,
+    showSubwayPopup: false,
+    showEmergencyDegreePopup: false,
+    showDistrict: false
+  }
+  onLoad() {
+    http.get('/building/list', {})
+      .success(res => {
+        this.directionalBuildingItem = res.data.map(item => {
+          return {
+            id: item.id,
+            name: `(${item.cityName}${item.districtName}) ${item.buildingName}`
+          }
+        })
+      })
+  }
+  computed = {}
+  events = {
+    choosedGeo(choosed) {
+      this.showDistrict = false
+      //this.chooseConfirmItem.district = choosed
+      let item = this.chooseConfirmItem
+      const { province, city, district } = choosed
+      item.provinceId = province.id
+      item.provinceName = province.shortName
+      item.cityId = city.id
+      item.cityName = city.shortName
+      item.districtIds = Object.values(district).map(v => {
+        return v.id
+      })
+      item.districtNames = Object.values(district).map(v => {
+        return v.shortName
+      })
+
+    },
+  }
+  methods = {
+    customSubmit() {
+      const v = this.chooseConfirmItem
+      let buildingIds = [],
+        buildingNames = []
+      this.chooseConfirmItem.directionalBuilding.forEach(item => {
+        buildingIds.push(item.id)
+        buildingNames.push(item.name)
+      })
+
+      const _params = {
+        ...v,
+        districtNames: v.districtNames.toString(),
+        districtIds: v.districtIds.toString(),
+        subways: v.subways.join(','), //地铁
+        // 定向楼盘
+        buildingIds: buildingIds.join(),
+        buildingNames: buildingNames.join()
+      }
+
+      console.log(_params)
+      //验证数据
+      const validation = {
+        appointment: '预约看房时间必填',
+        budget: '预算范围必填',
+        // budgetMax: '',
+        // budgetMin: '',
+        // buildingIds: '',
+        // buildingNames: '',
+        cityId: '城市必选',
+        // cityName: '城市必选',
+        customerName: '客户姓名必填',
+        // degreeName: '',
+        degreeType: '紧急程度必填',
+        districtIds: '目标区域必填',
+        // districtNames: '',
+        // gender: '',
+        // handsType: '',
+        houseType: '房型必填',
+        // houseTypeName: '',
+        // phone: '',
+        // propertyName: '',
+        propertyType: '物业类型必填',
+        provinceId: '省必选',
+        // provinceName: '',
+        remarks: '备注必填',
+        // subways: ''
+      }
+      const isValid = Object.keys(validation).every(k => {
+        if (_params[k] == undefined || _params[k] == '') {
+          wx.showModal({
+            title: '提示',
+            content: validation[k]
+          })
+          return false
+        } else {
+          return true
+        }
+      })
+      if (!isValid) { return }
+      //校验数据 end
+
+
+      const _this = this;
+      http.post('/demand', _params)
+        .success(_res => {
+          wx.showModal({
+            title: '提示',
+            content: '发布新需求成功',
+            success: function(res) {
+              if (res.confirm) {
+                console.log('用户点击确定', _this)
+                _this.$navigate('./custom_demandDetail', {
+                  demandId: _res.data
+                })
+              } else if (res.cancel) {
+                console.log('用户点击取消')
+              }
+            }
+          })
+        })
+    },
+
+    fetchData(key, e) {
+      this.chooseConfirmItem[key] = e.detail.value
+    },
+    tapShowPicker(key) {
+      this[key] = true
+    },
+
+
+    togglePropertyType(propertyTypeItem) {
+      this.showPropertyTypePopup = false;
+      this.chooseConfirmItem.propertyName = propertyTypeItem.name;
+      this.chooseConfirmItem.propertyType = propertyTypeItem.type;
+    },
+    toggleHouseType(houseTypeItem) {
+      this.showHouseTypePopup = false;
+      this.chooseConfirmItem.houseTypeName = houseTypeItem.name;
+      this.chooseConfirmItem.houseType = houseTypeItem.type;
+    },
+    toggleBudgetRange(budgetRangeItem) {
+      this.showbudgetRangePopup = false;
+      this.chooseConfirmItem.budget = budgetRangeItem.name;
+      this.chooseConfirmItem.budgetMin = budgetRangeItem.budgetMin;
+      this.chooseConfirmItem.budgetMax = budgetRangeItem.budgetMax;
+    },
+    toggleEmergencyDegree(emergencyDegreeItem) {
+      this.showEmergencyDegreePopup = false
+      this.chooseConfirmItem.degreeName = emergencyDegreeItem.degreeName;
+      this.chooseConfirmItem.degreeType = emergencyDegreeItem.type;
+    },
+    checkboxBuildingChange(e) {
+      this.chooseConfirmItem.directionalBuilding = e.detail.value.map(item => {
+        return this.directionalBuildingItem[item]
+      })
+
+    },
+    cancelEdit() {
+      this.showdirectionalBuildingPopup = false;
+      this.showSubwayPopup = false;
+      this.showDistrict = false
+    },
+    confirmBuildingChoose() {
+      // 定向房源
+      this.showdirectionalBuildingPopup = false;
+
+      //this.chooseConfirmItem.directionalBuilding = this.chooseConfirmItem.directionalBuilding;
+      // .map(item=>{
+      //   return item.id
+      // }).toString()
+
+    },
+
+    confirmSubWayChoose() {
+      //地铁线
+      this.showSubwayPopup = false;
+      //this.chooseConfirmItem.subways = this.chooseConfirmItem.subways
+    },
+    delSubway(index) {
+      this.chooseConfirmItem.subways.splice(index, 1)
+
+    },
+    delDirectBuilding(index) {
+      this.chooseConfirmItem.directionalBuilding.splice(index, 1)
+    },
+    delDistrict(index) {
+      this.chooseConfirmItem.districtIds.splice(index, 1)
+      this.chooseConfirmItem.districtNames.splice(index, 1)
+    },
+
+  }
+  onPullDownRefresh() {
+    console.log('onPullDownRefresh')
+    wx.stopPullDownRefresh()
+  }
+}
+
+</script>
+<style lang="less">
+.showChoosedGeo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+}
+
+.hideChoosedGeo {
+  display: none;
+}
+
+.bottom-btn {
+  text-align: center;
+  margin-top: 100rpx;
+  button {
+    margin-top: 50rpx;
+  }
+}
+
+._sex {
+  margin-right: 20rpx;
+}
+
+.my-choose-view {
+  padding: 12px 30px;
+  border-bottom: 1px solid #eee;
+  .view-list {
+    overflow: hidden;
+    margin: 4px 0;
+  }
+  .my-left {
+    float: left;
+  }
+  .my-right {
+    float: right;
+  }
+}
+
+.my-green {
+  color: #0b4;
+}
+
+.my-gray {
+  color: #999!important;
+}
+
+.popup-example--bottom .zan-btns {
+  margin: 0;
+}
+
+.zan-dialog__content {
+  color: #666;
+}
+
+.my-dialog-content label {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.zan-cell {
+  position: relative;
+  padding: 12px 15px;
+  display: flex;
+  align-items: center;
+  line-height: 1.4;
+  font-size: 14px
+}
+
+.zan-cell::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 200%;
+  transform: scale(.5);
+  transform-origin: 0 0;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 0 solid #e5e5e5;
+  border-bottom-width: 1px;
+  left: 15px;
+  right: 0
+}
+
+.zan-cell__icon {
+  margin-right: 5px
+}
+
+.zan-cell__bd {
+  flex: 1
+}
+
+.zan-cell__text {
+  line-height: 24px;
+  font-size: 14px
+}
+
+.zan-cell__desc {
+  line-height: 1.2;
+  font-size: 12px;
+  color: #666
+}
+
+.zan-cell__ft {
+  position: relative;
+  text-align: right;
+  color: #666
+}
+
+.zan-cell__no-pading {
+  padding: 0
+}
+
+.zan-cell__no-pading .zan-cell__bd_padding {
+  padding: 12px 0 12px 15px
+}
+
+.zan-cell__no-pading .zan-cell__bd_padding .zan-form__input {
+  height: 26px
+}
+
+.zan-cell__no-pading .zan-cell__ft_padding {
+  padding: 12px 15px 12px 0
+}
+
+.zan-cell--last-child::after,
+.zan-cell:last-child::after {
+  display: none
+}
+
+.zan-cell--access .zan-cell__ft {
+  padding-right: 13px
+}
+
+.zan-cell--access .zan-cell__ft::after {
+  position: absolute;
+  top: 50%;
+  right: 2px;
+  content: " ";
+  display: inline-block;
+  height: 6px;
+  width: 6px;
+  border-width: 2px 2px 0 0;
+  border-color: #c8c8c8;
+  border-style: solid;
+  transform: translateY(-50%) matrix(.71, .71, -.71, .71, 0, 0)
+}
+
+.zan-cell--switch {
+  padding-top: 6px;
+  padding-bottom: 6px
+}
+
+.zan-field {
+  padding: 7px 15px;
+  color: #333
+}
+
+.zan-field--wrapped {
+  margin: 0 15px;
+  background-color: #fff
+}
+
+.zan-field--wrapped::after {
+  left: 0;
+  border-width: 1px;
+  border-radius: 4px
+}
+
+.zan-field.zan-field--wrapped::after {
+  display: block
+}
+
+.zan-field--wrapped+.zan-field--wrapped {
+  margin-top: 10px
+}
+
+.zan-field--error {
+  color: #f40
+}
+
+.zan-field--wrapped.zan-field--error::after {
+  border-color: #f40
+}
+
+.zan-field__title {
+  color: #333;
+  min-width: 65px;
+  padding-right: 10px
+}
+
+.zan-field__input {
+  flex: 1;
+  line-height: 1.6;
+  padding: 4px 0;
+  min-height: 22px;
+  height: auto;
+  font-size: 14px
+}
+
+.zan-field__placeholder {
+  font-size: 14px
+}
+
+.zan-field__input--right {
+  text-align: right
+}
+
+.zan-stepper {
+  color: #666
+}
+
+.zan-stepper view {
+  display: inline-block;
+  line-height: 20px;
+  padding: 5px 0;
+  text-align: center;
+  min-width: 40px;
+  box-sizing: border-box;
+  vertical-align: middle;
+  font-size: 12px;
+  border: 1rpx solid #999
+}
+
+.zan-stepper .zan-stepper__minus {
+  border-right: none;
+  border-radius: 2px 0 0 2px
+}
+
+.zan-stepper .zan-stepper__text {
+  border: 1rpx solid #999;
+  display: inline-block;
+  text-align: center;
+  vertical-align: middle;
+  height: 30px;
+  width: 40px;
+  min-height: auto;
+  font-size: 12px;
+  line-height: 30px
+}
+
+.zan-stepper .zan-stepper__plus {
+  border-left: none;
+  border-radius: 0 2px 2px 0
+}
+
+.zan-stepper .zan-stepper--disabled {
+  background: #f8f8f8;
+  color: #bbb;
+  border-color: #e8e8e8
+}
+
+.zan-stepper--small view {
+  min-width: 36px;
+  line-height: 18px
+}
+
+.zan-stepper--small .zan-stepper__text {
+  width: 36px;
+  line-height: 28px;
+  height: 28px
+}
+
+</style>

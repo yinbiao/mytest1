@@ -1,0 +1,164 @@
+<template>
+  <view class="container">
+    <roomListSearchBar @searchDataEvent="searchDataEvent"></roomListSearchBar>
+    <view class="buildingListContainer">
+      <roomListVertical :roomList.sync="buildingList"></roomListVertical>
+    </view>
+  </view>
+</template>
+<script>
+import wepy from 'wepy'
+import RoomListVertical from '../components/roomList_vertical'
+import RoomListSearchBar from '../components/roomList_searchBar'
+import http from '../utils/http.js'
+import C from '../constant/index.js'
+
+export default class FindBuildingList extends wepy.page {
+  config = {
+    navigationBarTitleText: '楼盘列表',
+    enablePullDownRefresh: true
+  }
+
+  components = {
+    roomListVertical: RoomListVertical,
+    // roomListVertical2: RoomListVertical,
+    roomListSearchBar: RoomListSearchBar
+  }
+  computed = {
+
+  }
+
+  data = {
+    tapSearch: false,
+    urlParams: {},
+
+    itemArray: [],
+    listStatus: 0, // 0: 初始状态；1：首次正在加载数据；2：正在上拉加载数据；3：正在下拉刷新数据；4：加载完成，数据正常，有下一页；5：加载完成，无下一页；6：无数据；7：首次加载接口报错；8；上拉加载接口报错
+    currentPage: 1,
+    hasNext: true,
+    buildingList: []
+  }
+
+  methods = {
+
+  }
+
+  events = {
+    searchDataEvent(params, event) {
+      this.fetchBuildingList(params)
+      //console.error(arguments)
+    }
+  }
+
+
+  onLoad(params) {
+    if (params.tapSearch) {
+      this.tapSearch = true
+      this.$apply()
+    }
+    this.urlParams = params
+    if (params.attention) {
+      wx.setNavigationBarTitle({
+        title: '我关注的楼盘列表'
+      })
+    }else if(params.mine){
+      wx.setNavigationBarTitle({
+        title: '我发布的楼盘列表'
+      })
+
+    }else if(params.report){
+      wx.setNavigationBarTitle({
+        title: '我的报备列表'
+      })
+      
+    }
+
+    this.fetchBuildingList()
+  }
+
+  fetchBuildingList(params = {}) {
+
+    let data = { ...this.urlParams, ...params }
+    const gd = this.$parent.globalData;
+    const baseUrl = gd.baseAssetsUrl
+    // const id=gd.currentCity.id;
+    // id && (data.cityId=id);
+    http.get('/building/list', data)
+      .success(res => {
+        // console.log('C=== >',C)
+        this.buildingList = res.data.map(item => {
+          return {
+            ...item,
+            banner: baseUrl + item.banners.split(',')[0],
+            propertyTypeName: item.propertyType && C.propertyType[item.propertyType].name,
+            saleTypeName: item.saleType && C.saleType[item.saleType].name
+          }
+        })
+        this.$apply()
+        console.log('/building/list=>', res)
+      })
+
+  }
+  onPullDownRefresh(){
+    console.log('onPullDownRefresh')
+    wx.stopPullDownRefresh()
+  }
+}
+
+</script>
+<style lang="less">
+#roomListSearchBar.hasKeywordBar {
+  height: 88rpx;
+}
+
+.container {
+  background-color: #ffffff;
+  .recommendTitle {
+    font-size: 36rpx;
+    color: #323232;
+    margin: 0 40rpx;
+    text-align: left;
+    line-height: 60rpx;
+  }
+  .hide {
+    display: none;
+    height: 0;
+    overflow: hidden;
+  }
+
+  .container {
+    height: 100%;
+    background-color: white;
+  }
+  .search-box {
+    padding: 20rpx 30rpx;
+    background-color: #f9f9f9;
+
+    input,
+    text {
+      height: 60rpx;
+      line-height: 60rpx;
+      margin-left: 22rpx;
+      flex-grow: 1;
+      flex: 1;
+    }
+    .input-wrapper {
+      display: flex;
+      flex-flow: row nowrap;
+      background-color: #e8e8e9;
+      align-items: center;
+      padding-left: 22rpx;
+      border-radius: 4rpx;
+    }
+  }
+  .content {
+    background-color: white;
+    .noDataTip {
+      color: #9b9b9b;
+      font-size: 28rpx;
+      padding: 30rpx;
+    }
+  }
+}
+
+</style>

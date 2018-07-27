@@ -1,0 +1,487 @@
+<template>
+  <view class="container">
+    <!-- <vipSearchBar @searchDataEvent="searchDataEvent"></vipSearchBar> -->
+    <!-- <view>筛选项：中介、楼盘  区域、时间、维护人经理和业务员、成交量、平台费</view> -->
+    <view class="topSearch">
+      <view class="searchArea mg-color-light">
+        <icon type="search" size="14" />
+        <input type="text" placeholder="搜索会员公司名称" confirm-type="search" @input="keywordInput" @confirm="keywordSearch" />
+      </view>
+    </view>
+    <view class="filterItems">
+      <!-- 中介、楼盘 -->
+      <picker class='fItem' bindchange="bindPickerChange" value="{{vipIndex}}" range="{{vipArray}}">
+        <view class="picker">
+          {{vipArray[vipIndex]}}
+          <i class="icon-triangle"></i>
+        </view>
+      </picker>
+      <!-- 区域 -->
+      <view class='fItem' @tap="tapDistrict">{{districtName}} <i class="icon-triangle"></i></view>
+      <!-- 维护人 -->
+      <picker class='fItem' bindchange="bindServicerChange" value="{{servicerIndex}}" range="{{servicer}}" range-key="name">
+        <view class="picker">
+          {{servicer[servicerIndex].name}}
+          <i class="icon-triangle"></i>
+        </view>
+      </picker>
+      <!-- 结算 -->
+      <picker class='fItem' bindchange="bindSettlementChange" value="{{settlementType}}" range="{{settlement}}">
+        <view class="picker">
+          {{settlement[settlementType]}}
+          <i class="icon-triangle"></i>
+        </view>
+      </picker>
+      <!-- 时间 -->
+      <view class='fItem' @tap="tapDate">更多 <i class="icon-triangle"></i></view>
+    </view>
+    <view wx:if="{{isHideDate}}" class="searchMorePanel">
+      <view class='filterPanel'>
+        <view style='border-right: 1px solid #efefef;'>时间:</view>
+        <picker class='fItem' mode="date" value="{{date}}" bindchange="bindDateChange('dateStart')">
+          {{dateStart}} 起
+        </picker>
+        <picker class='fItem' mode="date" value="{{date}}" bindchange="bindDateChange('dateEnd')">
+          {{dateEnd}} 止
+        </picker>
+      </view>
+      <view style='display: flex;align-content: flex-end;padding: 12px;justify-content:flex-end;'>
+        <view>
+          <button class="zan-btn zan-btn--primary zan-btn--small" @tap="clearParams">清空筛选项</button>
+          <!-- <button class="zan-btn zan-btn--primary zan-btn--small" @tap="moreConfirm">确定</button> -->
+        </view>
+      </view>
+    </view>
+    <view class='filterBackground' wx:if="{{isHideDate}}" @tap="tapBackground"></view>
+    <!-- 目标区域 -->
+    <view class="{{ showDistrict ? 'showChoosedGeo' : 'hideChoosedGeo' }}">
+      <ChooseGeoMultiple @choosedGeo="choosedGeo2" multiple="0">
+    </view>
+    <!-- 楼盘和中介列表 -->
+    <VipVertical :params.sync="params" @searchDataEvent="searchDataEvent">
+  </view>
+</template>
+<script>
+import wepy from 'wepy'
+import http from '../utils/http.js'
+import C from '../constant/index.js'
+import ChooseGeoMultiple from '../components/chooseGeoMultiple'
+import VipVertical from '../components/vip_vertical'
+// import vipSearchBar from '../components/vip_searchBar'
+export default class VipList extends wepy.page {
+  config = {
+    navigationBarTitleText: '会员管理',
+    enablePullDownRefresh: true
+  }
+  components = {
+    ChooseGeoMultiple,
+    VipVertical
+  }
+  data = {
+    isHideDate: false,
+    dateStart: '', //公司入驻时间
+    dateEnd: '',
+
+    vipCompanyName: '', //搜索框公司名称
+
+    vipArray: ['楼盘', '中介'], //vipType 公司类型 1楼盘，2中介
+    vipIndex: 0,
+    vipType: 1,
+
+    platformUserId: null,
+
+    showDistrict: false, //公司区域地址
+
+    districtName: '区域',
+    districtId: '',
+    // date:'日期',
+    servicer: [{ name: '维护人', id: 0 },{ name: '无维护人', id: -1 }],
+    servicerIndex: 0,
+
+    settlementType: 0,
+    settlement: ['结算', '已结', '未结'],
+
+    params:{}
+
+  }
+  computed = {
+    // dateRange() {
+    //   let data
+    //   if (!this.dateStart && !this.dateEnd) {
+    //     data = '日期'
+    //   } else {
+    //     data = [this.dateStart, this.dateEnd].join()
+    //   }
+    //   return data
+    // }
+  }
+  events = {
+    searchDataEvent(e) {
+      console.log(e)
+    },
+    choosedGeo2(choosed) {
+      this.showDistrict = false
+      //this.chooseConfirmItem.district = choosed
+      let item = {}
+      const { province, city, district } = choosed
+      item.provinceId = province.id
+      item.provinceName = province.shortName
+      item.cityId = city.id
+      item.cityName = city.shortName
+      item.districtIds = Object.values(district).map(v => {
+        return v.id
+      })
+      item.districtNames = Object.values(district).map(v => {
+        return v.shortName
+      })
+
+      this.districtName = item.districtNames.join()
+
+      this.districtId = item.districtIds
+
+      this.initData()
+
+    },
+  }
+  methods = {
+    clearParams() {
+      this.dateStart = '' //公司入驻时间
+      this.dateEnd = ''
+
+      this.vipCompanyName = '' //搜索框公司名称
+
+      this.vipIndex = 0
+      this.vipType = 1
+
+      this.platformUserId = null
+
+      // this.showDistrict= false //公司区域地址
+
+      this.districtName = '区域'
+      this.districtId = ''
+      // date:'日期',
+      this.servicerIndex = 0
+
+      this.settlementType = 0
+      this.isHideDate = false
+      this.initData()
+    },
+    bindSettlementChange(e) {
+      this.settlementType = e.detail.value
+      this.initData()
+    },
+    bindServicerChange(e) {
+      this.servicerIndex = e.detail.value
+      this.platformUserId = this.servicer[this.servicerIndex].id
+      this.initData()
+    },
+    keywordSearch() {
+      this.initData()
+    },
+    keywordInput(e) {
+      this.vipCompanyName = e.detail.value
+    },
+    tapDistrict() {
+      this.showDistrict = !this.showDistrict
+    },
+    tapDate() {
+      this.isHideDate = !this.isHideDate
+    },
+    moreConfirm() {
+      this.isHideDate = !this.isHideDate
+    },
+    tapBackground(){
+      this.isHideDate = !this.isHideDate
+    },
+    bindDateChange(key, e) {
+      this[key] = e.detail.value
+      // console.log(e.detail.value)
+      this.initData()
+    },
+    bindPickerChange(e) {
+      this.vipType = parseInt(e.detail.value) + 1
+      this.vipIndex=e.detail.value
+      this.initData()
+    }
+  }
+
+  onLoad() {
+     http.get('/user/platformUsers').success(res=>{
+      //{ name: '无维护人', id: 0 }, { name: 'aa', id: 1 }, { name: 'bb', id: 2 }
+      this.servicer=this.servicer.concat(res.data)
+      this.$apply()
+    })
+    this.initData()
+  }
+  calcParams() {
+    this.$apply()
+    const { vipCompanyName, vipType, districtId, platformUserId, settlementType, dateStart, dateEnd } = this.data
+    const p = { vipCompanyName, vipType, districtId, platformUserId, settlementType, dateStart, dateEnd }
+    Object.keys(p).map(v => {
+      if (!p[v]) { delete p[v] }
+    })
+    return p
+  }
+  initData() {
+    const params = this.calcParams()
+    this.params=params
+    console.log('this.data', this.data, params)
+  }
+
+  onPullDownRefresh() {
+    console.log('onPullDownRefresh')
+    wx.stopPullDownRefresh()
+  }
+}
+
+</script>
+<style lang="less">
+.topSearch {
+  height: 100rpx;
+  padding: 0 30rpx;
+  background-color: #fff;
+  display: flex;
+  flex-flow: column;
+  justify-content: center;
+  position: relative;
+  z-index: 11;
+  .searchArea {
+    box-sizing: border-box;
+    width: 100%;
+    height: 60rpx;
+    border-radius: 8rpx;
+    background-color: #f1f1f1;
+    padding-left: 20rpx;
+    font-size: 28rpx;
+    display: flex;
+    align-items: center;
+    input {
+      flex: 1;
+      height: 60rpx;
+      margin: 0 10rpx;
+      padding: 6rpx;
+      line-height: 48rpx;
+      color: #3f3f3f;
+    }
+  }
+}
+
+.roomList_vertical {
+  margin: 0;
+}
+
+.container {
+  background: #fff;
+}
+
+.filterBackground {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.2);
+  z-index: 9;
+}
+
+.showChoosedGeo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+}
+
+.hideChoosedGeo {
+  display: none;
+}
+
+.searchMorePanel {
+  position: fixed;
+  width: 100%;
+  padding-bottom: 50px;
+  z-index: 11;
+  background: #fff;
+  padding-bottom: 40px;
+}
+
+.filterItems,
+.filterPanel {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  padding: 12px 0;
+  background: white;
+  border-bottom: 1px solid #eee;
+  border-top: 1px solid #eee;
+  color: #444;
+}
+
+.filterPanel {
+  padding: 12px;
+}
+
+.fItem {
+  flex: 1;
+  text-align: center;
+
+  font-size: 28rpx;
+  white-space: nowrap;
+}
+
+.filterItems>view {}
+
+.inline {
+  display: inline-block;
+}
+
+.zan-panel {
+  padding-top: 10px;
+}
+
+.contain {
+  height: 100%;
+  background: #f4f4f4;
+}
+
+.home-button {
+  width: 80rpx;
+  height: 80rpx;
+  position: fixed;
+  bottom: 100rpx;
+  right: 40rpx;
+  background-color: #f68954;
+  text-align: center;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 27rpx;
+  line-height: 40rpx;
+  padding: 10rpx;
+}
+
+
+.zan-popup__container {
+  text-align: center;
+}
+
+.zan-btns {
+  margin: 0;
+}
+
+.zan-dialog--container {
+  position: fixed;
+  top: 45%;
+  left: 50%;
+  width: 80%;
+  height: 0;
+  font-size: 16px;
+  overflow: hidden;
+  transition: all .2s linear;
+  border-radius: 4px;
+  background-color: #fff;
+  transform: translate3d(-50%, -50%, 0);
+  color: #333;
+  opacity: 0;
+  z-index: 1
+}
+
+.zan-dialog--mask {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, .6);
+  transition: .3s;
+  display: none;
+  z-index: 1
+}
+
+.zan-dialog__header {
+  padding: 15px 0 0;
+  text-align: center
+}
+
+.zan-dialog__content {
+  position: relative;
+  padding: 15px 20px;
+  line-height: 1.5;
+  min-height: 40px
+}
+
+.zan-dialog__content::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 200%;
+  transform: scale(.5);
+  transform-origin: 0 0;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 0 solid #e5e5e5;
+  border-bottom-width: 1px
+}
+
+.zan-dialog__content--title {
+  color: #999;
+  font-size: 14px
+}
+
+.zan-dialog__footer {
+  overflow: hidden
+}
+
+.zan-dialog__button {
+  line-height: 50px;
+  height: 50px;
+  padding: 0 5px;
+  border-radius: 0;
+  margin-bottom: 0
+}
+
+.zan-dialog__button::after {
+  border-width: 0;
+  border-radius: 0
+}
+
+.zan-dialog--show .zan-dialog--container {
+  opacity: 1;
+  height: auto
+}
+
+.zan-dialog--show .zan-dialog--mask {
+  display: block
+}
+
+.zan-dialog__footer--horizon {
+  display: flex
+}
+
+.zan-dialog__footer--horizon .zan-dialog__button {
+  flex: 1
+}
+
+.zan-dialog__footer--horizon .zan-dialog__button::after {
+  border-right-width: 1px
+}
+
+.zan-dialog__footer--horizon .zan-dialog__button:last-child::after {
+  border-right-width: 0
+}
+
+.zan-dialog__footer--vertical .zan-dialog__button {
+  flex: 1
+}
+
+.zan-dialog__footer--vertical .zan-dialog__button::after {
+  border-bottom-width: 1px
+}
+
+.zan-dialog__footer--vertical .zan-dialog__button:last-child::after {
+  border-bottom-width: 0
+}
+
+</style>

@@ -1,0 +1,826 @@
+<template>
+  <view style="background:#f4f4f4;height:100%;">
+    <view class="zan-panel-title">客户信息</view>
+    <view class="zan-panel">
+      <view class="zan-cell">
+        <view class="zan-icon zan-icon-contact" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">发布人 </view>
+        <view class="zan-cell__ft">{{demand.nickName}}</view>
+      </view>
+      <view class="zan-cell" @tap="callPhone({{demand.phoneNum}})">
+        <view class="zan-icon zan-icon-phone" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">发布人电话 </view>
+        <view class="zan-cell__ft" style='color:green;font-weight:bold;'>{{demand.phoneNum}}</view>
+      </view>
+      <view class="zan-cell">
+        <view class="zan-icon zan-icon-points-mall" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">公司 </view>
+        <view class="zan-cell__ft">{{demand.companyName}}</view>
+      </view>
+      <view class="zan-cell">
+        <view class="zan-icon zan-icon-contact" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">{{demand.customerName}}</view>
+        <view class="zan-cell__ft">{{demand.gender==1?'男':'女'}}</view>
+      </view>
+      <view class="zan-cell">
+        <view class="zan-icon zan-icon-question" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">新房/二手房</view>
+        <view class="zan-cell__ft">{{demand.handsTypeName}}</view>
+      </view>
+      <view class="zan-cell">
+        <view class="zan-icon zan-icon-location" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">目标区域</view>
+        <view class="zan-cell__ft">{{demand.cityName}} {{demand.districtNames}}</view>
+      </view>
+      <view class="zan-cell">
+        <view class="zan-icon zan-icon-upgrade" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">定向楼盘</view>
+        <view class="zan-cell__ft">{{demand.buildingNames}}</view>
+      </view>
+      <view class="zan-cell">
+        <view class="zan-icon zan-icon-logistics" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">地铁线</view>
+        <view class="zan-cell__ft" wx:if="{{demand.subways}}">{{demand.subways}}号线</view>
+      </view>
+      <view class="zan-cell">
+        <view class="zan-icon zan-icon-records" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">户型</view>
+        <view class="zan-cell__ft">{{demand.houseTypeName}}</view>
+      </view>
+      <view class="zan-cell">
+        <view class="zan-icon zan-icon-description" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">物业类型</view>
+        <view class="zan-cell__ft">{{demand.propertyTypeName}}</view>
+      </view>
+      <view class="zan-cell">
+        <view class="zan-icon zan-icon-cash-back-record" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">预算</view>
+        <view class="zan-cell__ft">{{demand.budgetMin}}~{{demand.budgetMax}}万</view>
+      </view>
+      <view class="zan-cell">
+        <view class="zan-icon zan-icon-member-day-privilege" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">紧急程度</view>
+        <view class="zan-cell__ft">{{demand.degreeTypeName}}</view>
+      </view>
+      <view class="zan-cell">
+        <view class="zan-icon zan-icon-member-day-clock" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">预约看房时间</view>
+        <view class="zan-cell__ft">{{demand.appointment}}</view>
+      </view>
+      <view class="zan-cell">
+        <view class="zan-icon zan-icon-member-day-edit" style="margin-right:10rpx;"></view>
+        <view class="zan-cell__bd">备注</view>
+        <view class="zan-cell__ft">{{demand.remarks}}</view>
+      </view>
+    </view>
+    <view class="zan-btns" @tap="startCooperation({{demand.id}})" wx:if="{{userInfo.id != demand.userId}} && userInfo.permission.startCoporation">
+      <button class="zan-btn zan-btn--primary" style="margin-top:40px;">发起合作</button>
+    </view>
+    <view class="zan-dialog zan-dialog--show" wx:if="{{showPopup}}">
+      <view class="zan-dialog--mask"></view>
+      <view class="zan-dialog--container">
+        <view class="zan-dialog__header">
+          请输入符合需求的信息
+        </view>
+        <view class="zan-dialog__content zan-dialog__content--title">
+          <textarea bindblur="bindTextAreaBlur" auto-height placeholder="" />
+        </view>
+        <view class="zan-dialog__footer zan-dialog__footer--horizon">
+          <block>
+            <button class="zan-dialog__button zan-btn" @tap="cancelEdit">取消</button>
+          </block>
+          <block>
+            <button class="zan-dialog__button zan-btn zan-c-blue">提交合作申请</button>
+          </block>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+<script>
+import wepy from 'wepy'
+import http from '../utils/http.js'
+import C from '../constant/index.js'
+export default class customDemandDetail extends wepy.page {
+  config = {
+    navigationBarTitleText: '需求详情'
+  }
+
+  computed = {
+    userInfo() {
+      return this.$parent.globalData.userInfo
+    }
+  }
+  data = {
+    demand: {
+      id: '',
+      houseType: '',
+      provinceId: '',
+      cityId: '',
+      street: '',
+      districtIds: '',
+      provinceName: '',
+      cityName: '',
+      districtNames: '',
+      subways: '',
+      propertyType: '',
+      handsType: '',
+      budgetMin: '',
+      budgetMax: '',
+      buildingIds: '',
+      degreeType: '',
+      remarks: '',
+      appointment: '',
+      timestamp: '',
+      online: '',
+      propertyType: '',
+      userId: '',
+      customerName: '',
+      gender: '',
+      phone: '',
+    },
+    showPopup: false,
+  }
+
+  methods = {
+    callPhone(num) {
+      wx.makePhoneCall({
+        phoneNumber: num //仅为示例，并非真实的电话号码
+      })
+    },
+    startCooperation() {
+      const _this=this
+      http.post('/order/startCoporation', { demandId: this.demand.id })
+        .success(res => {
+          // wx.showToast({
+          //   title: '发起合作成功',
+          //   icon: 'success',
+          //   duration: 5000
+          // })
+          wx.showModal({
+            title: '提示',
+            content: '发起合作成功',
+            showCancel: false,
+            icon: 'success',
+            success: function(res) {
+              _this.$navigate('/my_customer')
+            }
+          })
+        })
+
+    }
+  }
+
+  onLoad(params) {
+    http.get('/demand', { id: params.demandId || 22 }).success(res => {
+      const d = res.data[0]
+      this.demand = d
+      d.appointment = new Date(d.appointment).toLocaleDateString()
+
+      d.handsTypeName = d.handsType && C.handsType[d.handsType].name
+      d.houseTypeName = d.houseType && C.houseType[d.houseType].name
+      d.propertyTypeName = d.propertyType && C.propertyType[d.propertyType].name
+      d.degreeTypeName = d.degreeType && C.emergencyDegree[d.degreeType].degreeName
+
+      this.$apply()
+    })
+  }
+  onPullDownRefresh() {
+    console.log('onPullDownRefresh')
+    wx.stopPullDownRefresh()
+  }
+}
+
+</script>
+<style lang="less">
+.topTip {
+  margin: 30rpx 0 0 31rpx;
+  font-size: 24rpx;
+  color: #999999;
+}
+
+.amountDiv {
+  color: #ee4255;
+  text-align: center;
+  font-size: 30rpx;
+  text {
+    vertical-align: text-top;
+    display: inline-block;
+  }
+  .amount {
+    font-size: 72rpx;
+    line-height: 72rpx;
+  }
+}
+
+.couponList {
+  padding: 20rpx;
+  .coupon {
+    margin-bottom: 20rpx;
+    background: url("https://assets.mgzf.com/appimg/ea89569777999721e390fcf7895fc540.png") no-repeat;
+    background-size: cover;
+    color: #333333;
+    .couponTop {
+      box-sizing: border-box;
+      height: 196rpx;
+      display: flex;
+      align-items: center;
+      .left {
+        width: 28.1%;
+        flex-shrink: 0;
+      }
+      .right {
+        border-left: dotted 1rpx #a0a0a0;
+        padding-left: 26rpx;
+        flex: 1;
+        max-width: 320px;
+        .title {
+          font-size: 30rpx;
+        }
+        .desc {
+          font-size: 24rpx;
+          white-space: nowrap;
+        }
+        .valid {
+          margin-top: 16rpx;
+          font-size: 24rpx;
+          color: #999999;
+        }
+      }
+    }
+    .couponBottom {
+      box-sizing: border-box;
+      height: 74rpx;
+      padding: 0 31rpx;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 24rpx;
+      color: #999999;
+      border-top: dashed 1rpx #d7d7d7;
+      .right {
+        height: 36rpx;
+        width: 36rpx;
+        background: url("https://assets.mgzf.com/appimg/5fa8025b983b6aea16ecbdc9d063e7f5.png") no-repeat;
+        background-size: cover;
+      }
+    }
+    &.disabled {
+      background-image: url("https://assets.mgzf.com/appimg/bd9f24899207a3f28ada44d5d7f438af.png");
+      color: #fff;
+      .couponTop {
+        .left {
+          color: #ffffff;
+        }
+        .right {
+          border-left: dotted 1rpx #ffffff;
+          .valid {
+            color: #dddddd;
+          }
+        }
+        .disableImg {
+          flex-shrink: 0;
+          width: 130rpx;
+          height: 130rpx;
+          margin-right: 26rpx;
+        }
+        .hasOverDate {
+          background: url("https://assets.mgzf.com/appimg/3fd82eefe8f211b8d8a61169d51b5ca9.png") no-repeat;
+          background-size: cover;
+        }
+        .hasDisabled {
+          background: url("https://assets.mgzf.com/appimg/0c2bd5d2f65cddaf74be5db603829e72.png") no-repeat;
+          background-size: cover;
+        }
+        .hasUsed {
+          background: url("https://assets.mgzf.com/appimg/af63946e2a37e0be8a82417da9f18356.png") no-repeat;
+          background-size: cover;
+        }
+      }
+      .couponBottom {
+        display: none;
+      }
+    }
+  }
+}
+
+.dialogView {
+  text-align: center;
+  font-size: 24rpx;
+  color: #333333;
+  .amountDiv {
+    margin-bottom: 10rpx;
+  }
+  .dialogImg {
+    height: 300rpx;
+    width: 300rpx;
+    margin: 10rpx 0;
+  }
+  .dialogTip {
+    font-size: 30rpx;
+  }
+}
+
+
+.btn-assess {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 2;
+}
+
+.zan-capsule {
+  display: inline-block;
+  font-size: 12px;
+  vertical-align: middle;
+  line-height: 19px;
+  transform: scale(.83)
+}
+
+.zan-capsule__left,
+.zan-capsule__right {
+  display: inline-block;
+  line-height: 17px;
+  height: 19px;
+  vertical-align: middle;
+  box-sizing: border-box
+}
+
+.zan-capsule__left {
+  padding: 0 2px;
+  color: #fff;
+  background: #999;
+  border-radius: 2px 0 0 2px;
+  border: 1rpx solid #999
+}
+
+.zan-capsule__right {
+  padding: 0 5px;
+  color: #999;
+  border-radius: 0 2px 2px 0;
+  border: 1rpx solid #999
+}
+
+.zan-capsule--danger .zan-capsule__left {
+  color: #fff;
+  background: #f24544;
+  border-color: #f24544
+}
+
+.zan-capsule--danger .zan-capsule__right {
+  color: #f24544;
+  border-color: #f24544
+}
+
+.zan-steps--steps.zan-steps--5 .zan-steps__step {
+  width: 25%
+}
+
+.zan-steps--steps.zan-steps--4 .zan-steps__step {
+  width: 33%
+}
+
+.zan-steps--steps.zan-steps--3 .zan-steps__step {
+  width: 50%
+}
+
+.zan-steps--steps .zan-steps__step {
+  position: relative;
+  float: left;
+  padding-bottom: 25px;
+  color: #b1b1b1
+}
+
+.zan-steps--steps .zan-steps__title {
+  transform: translateX(-50%);
+  font-size: 14px;
+  text-align: center
+}
+
+.zan-steps--steps .zan-steps__icons {
+  position: absolute;
+  top: 30px;
+  left: -10px;
+  padding: 0 8px;
+  background-color: #fff;
+  z-index: 10
+}
+
+.zan-steps--steps .zan-steps__circle {
+  display: block;
+  position: relative;
+  width: 5px;
+  height: 5px;
+  background-color: #e5e5e5;
+  border-radius: 50%
+}
+
+.zan-steps--steps .zan-steps__line {
+  position: absolute;
+  left: 0;
+  top: 32px;
+  width: 100%;
+  height: 1px;
+  background-color: #e5e5e5
+}
+
+.zan-steps--steps .zan-steps__step--done {
+  color: #333
+}
+
+.zan-steps--steps .zan-steps__step--done .zan-steps__line {
+  background-color: #06bf04
+}
+
+.zan-steps--steps .zan-steps__step--done .zan-steps__circle {
+  width: 5px;
+  height: 5px;
+  background-color: #09bb07
+}
+
+.zan-steps--steps .zan-steps__step--cur .zan-steps__icons {
+  top: 25px;
+  left: -14px
+}
+
+.zan-steps--steps .zan-steps__step--cur .zan-steps__circle {
+  width: 16px;
+  height: 16px;
+  background-image: url(https://b.yzcdn.cn/v2/image/wap/success_small@2x.png);
+  background-size: 16px 16px
+}
+
+.zan-steps--steps .zan-steps__step--cur .zan-steps__line {
+  background-color: #e5e5e5
+}
+
+.zan-steps--steps .zan-steps__step--first-child .zan-steps__title {
+  margin-left: 0;
+  transform: none;
+  text-align: left
+}
+
+.zan-steps--steps .zan-steps__step--first-child .zan-steps__icons {
+  left: -7px
+}
+
+.zan-steps--steps .zan-steps__step--last-child {
+  position: absolute;
+  right: 0;
+  top: 0;
+  text-align: right
+}
+
+.zan-steps--steps .zan-steps__step--last-child .zan-steps__title {
+  transform: none;
+  text-align: right
+}
+
+.zan-steps--steps .zan-steps__step--last-child .zan-steps__icons {
+  left: auto;
+  right: -6px
+}
+
+.zan-steps--steps .zan-steps__step--last-child .zan-steps__line {
+  display: none
+}
+
+.zan-steps--steps .zan-steps__step--db-title {
+  min-height: 29px
+}
+
+.zan-steps--steps .zan-steps__step--db-title .zan-steps__line {
+  top: 45px
+}
+
+.zan-steps--steps .zan-steps__step--db-title .zan-steps__icons {
+  top: 43px
+}
+
+.zan-steps--steps .zan-steps__step--db-title.zan-steps__step--cur .zan-steps__icons {
+  top: 39px
+}
+
+.zan-steps--vsteps {
+  color: #999;
+  font-size: 14px
+}
+
+.zan-steps--vsteps .zan-steps__step {
+  position: relative;
+  padding: 15px 0
+}
+
+.zan-steps--vsteps .zan-steps__step--done {
+  color: #4b0
+}
+
+.zan-steps--vsteps .zan-steps__line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 7px;
+  width: 1px;
+  background-color: #e5e5e5
+}
+
+.zan-steps--vsteps .zan-steps__title {
+  display: inline-block;
+  line-height: 20px;
+  padding-left: 27px
+}
+
+.zan-steps--vsteps .zan-steps__title--desc {
+  padding-left: 3px;
+  min-height: 100px;
+  display: block;
+  margin-left: 25px;
+}
+
+.zan-steps--vsteps .zan-steps__icons {
+  position: absolute;
+  left: 7px;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  padding: 3px 0;
+  background-color: #fff
+}
+
+.zan-steps--vsteps .zan-steps__circle {
+  width: 5px;
+  height: 5px;
+  background-color: #cacaca;
+  border-radius: 10px
+}
+
+.zan-steps--vsteps .zan-steps__step--done .zan-steps__circle {
+  width: 5px;
+  height: 5px;
+  background-color: #09bb07
+}
+
+.zan-steps--vsteps .zan-steps__step--cur .zan-steps__circle {
+  width: 16px;
+  height: 16px;
+  background: transparent url(https://b.yzcdn.cn/v2/image/wap/success_small@2x.png);
+  background-size: 16px 16px;
+  border-radius: 0
+}
+
+.zan-steps--vsteps .zan-steps__icon--active {
+  width: 13px;
+  height: 13px
+}
+
+.zan-steps--vsteps .zan-steps__step--first-child .zan-steps__title::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 50%;
+  left: 7px;
+  width: 1px;
+  background-color: #fff;
+  z-index: 1
+}
+
+.zan-steps--vsteps .zan-steps__step--last-child .zan-steps__title::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  bottom: 0;
+  left: 7px;
+  width: 1px;
+  background-color: #fff;
+  z-index: 1
+}
+
+.zan-steps {
+  position: relative
+}
+
+.zan-steps--steps.zan-steps--5 .zan-steps__step {
+  width: 25%
+}
+
+.zan-steps--steps.zan-steps--4 .zan-steps__step {
+  width: 33%
+}
+
+.zan-steps--steps.zan-steps--3 .zan-steps__step {
+  width: 50%
+}
+
+.zan-steps--steps .zan-steps__step {
+  position: relative;
+  float: left;
+  padding-bottom: 25px;
+  color: #b1b1b1
+}
+
+.zan-steps--steps .zan-steps__title {
+  transform: translateX(-50%);
+  font-size: 14px;
+  text-align: center
+}
+
+.zan-steps--steps .zan-steps__icons {
+  position: absolute;
+  top: 30px;
+  left: -10px;
+  padding: 0 8px;
+  background-color: #fff;
+  z-index: 10
+}
+
+.zan-steps--steps .zan-steps__circle {
+  display: block;
+  position: relative;
+  width: 5px;
+  height: 5px;
+  background-color: #e5e5e5;
+  border-radius: 50%
+}
+
+.zan-steps--steps .zan-steps__line {
+  position: absolute;
+  left: 0;
+  top: 32px;
+  width: 100%;
+  height: 1px;
+  background-color: #e5e5e5
+}
+
+.zan-steps--steps .zan-steps__step--done {
+  color: #333
+}
+
+.zan-steps--steps .zan-steps__step--done .zan-steps__line {
+  background-color: #06bf04
+}
+
+.zan-steps--steps .zan-steps__step--done .zan-steps__circle {
+  width: 5px;
+  height: 5px;
+  background-color: #09bb07
+}
+
+.zan-steps--steps .zan-steps__step--cur .zan-steps__icons {
+  top: 25px;
+  left: -14px
+}
+
+.zan-steps--steps .zan-steps__step--cur .zan-steps__circle {
+  width: 16px;
+  height: 16px;
+  background-image: url(https://b.yzcdn.cn/v2/image/wap/success_small@2x.png);
+  background-size: 16px 16px
+}
+
+.zan-steps--steps .zan-steps__step--cur .zan-steps__line {
+  background-color: #e5e5e5
+}
+
+.zan-steps--steps .zan-steps__step--first-child .zan-steps__title {
+  margin-left: 0;
+  transform: none;
+  text-align: left
+}
+
+.zan-steps--steps .zan-steps__step--first-child .zan-steps__icons {
+  left: -7px
+}
+
+.zan-steps--steps .zan-steps__step--last-child {
+  position: absolute;
+  right: 0;
+  top: 0;
+  text-align: right
+}
+
+.zan-steps--steps .zan-steps__step--last-child .zan-steps__title {
+  transform: none;
+  text-align: right
+}
+
+.zan-steps--steps .zan-steps__step--last-child .zan-steps__icons {
+  left: auto;
+  right: -6px
+}
+
+.zan-steps--steps .zan-steps__step--last-child .zan-steps__line {
+  display: none
+}
+
+.zan-steps--steps .zan-steps__step--db-title {
+  min-height: 29px
+}
+
+.zan-steps--steps .zan-steps__step--db-title .zan-steps__line {
+  top: 45px
+}
+
+.zan-steps--steps .zan-steps__step--db-title .zan-steps__icons {
+  top: 43px
+}
+
+.zan-steps--steps .zan-steps__step--db-title.zan-steps__step--cur .zan-steps__icons {
+  top: 39px
+}
+
+.zan-steps--vsteps {
+  color: #999;
+  font-size: 14px
+}
+
+.zan-steps--vsteps .zan-steps__step {
+  position: relative;
+  padding: 15px 0
+}
+
+.zan-steps--vsteps .zan-steps__step--done {
+  color: #4b0
+}
+
+.zan-steps--vsteps .zan-steps__line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 7px;
+  width: 1px;
+  background-color: #e5e5e5
+}
+
+.zan-steps--vsteps .zan-steps__title {
+  display: inline-block;
+  line-height: 20px;
+  padding-left: 27px
+}
+
+.zan-steps--vsteps .zan-steps__title--desc {
+  padding-left: 3px;
+  min-height: 100px;
+  display: block;
+  margin-left: 25px;
+}
+
+.zan-steps--vsteps .zan-steps__icons {
+  position: absolute;
+  left: 7px;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  padding: 3px 0;
+  background-color: #fff
+}
+
+.zan-steps--vsteps .zan-steps__circle {
+  width: 5px;
+  height: 5px;
+  background-color: #cacaca;
+  border-radius: 10px
+}
+
+.zan-steps--vsteps .zan-steps__step--done .zan-steps__circle {
+  width: 5px;
+  height: 5px;
+  background-color: #09bb07
+}
+
+.zan-steps--vsteps .zan-steps__step--cur .zan-steps__circle {
+  width: 16px;
+  height: 16px;
+  background: transparent url(https://b.yzcdn.cn/v2/image/wap/success_small@2x.png);
+  background-size: 16px 16px;
+  border-radius: 0
+}
+
+.zan-steps--vsteps .zan-steps__icon--active {
+  width: 13px;
+  height: 13px
+}
+
+.zan-steps--vsteps .zan-steps__step--first-child .zan-steps__title::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 50%;
+  left: 7px;
+  width: 1px;
+  background-color: #fff;
+  z-index: 1
+}
+
+.zan-steps--vsteps .zan-steps__step--last-child .zan-steps__title::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  bottom: 0;
+  left: 7px;
+  width: 1px;
+  background-color: #fff;
+  z-index: 1
+}
+
+</style>

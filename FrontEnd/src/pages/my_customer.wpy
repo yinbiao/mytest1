@@ -1,0 +1,190 @@
+<template>
+  <view style="height:100%;">
+    <view class="my_num" style="height:16%;">
+      <view class="manage mg-cell">
+        <view class="cellItem {{itemIndex==0 && 'selected'}}" @tap="tapItem(0,1)">
+          <view class="zan-icon zan-icon-edit zan-c-blue" style=""></view>
+          <view class="zan-c-gray-dark zan-font-12">报备</view>
+        </view>
+        <view class="cellItem {{itemIndex==1 && 'selected'}}" @tap="tapItem(1,3)">
+          <view class="zan-icon zan-icon-contact" style=""></view>
+          <view class="zan-c-gray-dark zan-font-12">合作</view>
+        </view>
+        <view class="cellItem {{itemIndex==2 && 'selected'}}" @tap="tapItem(2,5)">
+          <view class="zan-icon zan-icon-birthday-privilege zan-c-green" style=""></view>
+          <view class="zan-c-gray-dark zan-font-12">带看</view>
+        </view>
+        <view class="cellItem {{itemIndex==3 && 'selected'}}" @tap="tapItem(3,8)">
+          <view class="zan-icon zan-icon-records zan-c-gray" style=""></view>
+          <view class="zan-c-gray-dark zan-font-12">认购</view>
+        </view>
+        <view class="cellItem {{itemIndex==4 && 'selected'}}" @tap="tapItem(4,10)">
+          <view class="zan-icon zan-icon-after-sale zan-c-gray-darker" style=""></view>
+          <view class="zan-c-gray-dark zan-font-12">签约</view>
+        </view>
+        <view class="cellItem {{itemIndex==5 && 'selected'}}" @tap="tapItem(5,12)">
+          <view class="zan-icon zan-icon-certificate zan-c-red" style=""></view>
+          <view class="zan-c-gray-dark zan-font-12">结佣</view>
+        </view>
+      </view>
+    </view>
+    <view style="background:#f4f4f4;height:84%;">
+      <repeat for="{{orderItem}}">
+        <view class="zan-panel" @tap="goToCustomerDetail({{item}})">
+          <view class="zan-card">
+            <view class="zan-card__detail" style="margin-left:0;">
+              <view class="zan-card__detail-row">
+                <view class="zan-card__right-col">
+                  <view class="zan-tag zan-tag--danger">{{item.stateName}}</view>
+                </view>
+                <view class="zan-card__left-col zan-ellipsis--l2 zan-font-16">
+                  客户：{{item.customerNameD || item.customerNameR}}
+                </view>
+              </view>
+              <view class="zan-card__detail-row zan-c-gray-darker">
+                <view class="zan-card__right-col" wx:if="{{item.budgetMin || item.budgetMax}}">预算：{{item.budgetMin}}~{{item.budgetMax}}万</view>
+                <view class="zan-card__left-col zan-c-grayer">
+                  时间：{{item.timestamp}}
+                </view>
+              </view>
+              <view class="zan-card__detail-row zan-c-gray-darker">
+                <view class='zan-card__right-col' @tap.stop="stop">
+                  <!-- 楼盘管理者分配对应的楼盘顾问 -->
+                  接收：{{item.targetorName || item.targetorNickName}}
+                </view>
+                <view class="zan-card__left-col zan-c-black">发起：{{item.originatorName || item.originatorNickName}}</view>
+              </view>
+            </view>
+            <view class="zan-card__detail-row zan-c-gray-darker" style='border-top:1px solid #eee;padding-top: 10px;margin-top: 10px;' wx:if="{{item.type == 0 && userInfo.permission.addAdviser}}">
+              <view class='zan-card__right-col' @tap.stop="stop">
+                <!-- 楼盘管理者分配对应的楼盘顾问 -->
+                <picker @change="bindPickerChange({{item}})" value="{{index}}" range="{{advisers}}" range-key="_name">
+                  <button class="zan-btn zan-btn--small">分配顾问</button>
+                </picker>
+              </view>
+            </view>
+          </view>
+        </view>
+    </view>
+    </repeat>
+  </view>
+  </view>
+</template>
+<script>
+import wepy from 'wepy'
+import http from '../utils/http.js'
+import C from '../constant/index.js'
+export default class MyCustomer extends wepy.page {
+  config = {
+    navigationBarTitleText: '我的客户'
+  }
+
+  data = {
+    itemIndex: -1,
+    orderItem: [],
+    advisers: [],
+    index: 0,
+  }
+  computed = {
+    userInfo() {
+      return this.$parent.globalData.userInfo
+    },
+
+  }
+  methods = {
+    stop() { return false },
+    bindPickerChange(orderItem, e) {
+      const _this = this
+      let data = {
+        orderId: orderItem.oid,
+        adviserId: this.advisers[e.detail.value].id
+      }
+      http.post('/order/addAdviser', data).success(res => {
+        http.get('/order/list', {}).success(res => {
+          _this.orderItem = res.data
+          _this.$apply()
+        })
+        wx.showModal({
+          title: '提示',
+          content: '分配顾问成功',
+          showCancel: false
+        })
+
+      })
+
+    },
+    tapItem(index, type) {
+      this.itemIndex = index
+      http.get('/order/list', { state: type }).success(res => {
+        this.orderItem = res.data
+        console.log(this.orderItem)
+        this.$apply()
+      })
+    },
+    goToCustomerDetail(order) {
+      this.$navigate('./my_customerDetail', { orderId: order.oid })
+    }
+  }
+  onLoad(params) {
+    const data = {}
+    if (params.orderState) {
+      data.state = params.orderState
+      this.itemIndex = params.orderState
+    }
+    http.get('/order/list', data).success(res => {
+      this.orderItem = res.data
+      this.$apply()
+    })
+
+    http.get('/user/buildingUsers', {}).success(res => {
+      this.advisers = res.data.map(v => {
+        v._name = v.name || v.nickName
+        return v
+      })
+      this.$apply()
+    })
+
+  }
+  onPullDownRefresh() {
+    console.log('onPullDownRefresh')
+    wx.stopPullDownRefresh()
+  }
+}
+
+</script>
+<style lang="less">
+.selected {
+  background: #4b0;
+  font-weight: bold;
+  view {
+    color: #fff!important;
+  }
+}
+
+.my_num {
+  .my_num_view {
+    padding: 30rpx;
+    padding-bottom: 5rpx;
+    border-top: 1px solid #eee;
+  }
+}
+
+.manage {
+  text-align: center;
+  padding: 30rpx 0;
+  .cellItem {
+    flex: 1;
+    padding: 35rpx 0;
+    border-bottom: 1px solid #eee;
+    border-top: 1px solid #eee;
+  }
+  .cellItem+.cellItem {
+    border-left: 1rpx solid #e5e5e5;
+  }
+}
+
+.zan-card {
+  padding: 30rpx;
+}
+
+</style>

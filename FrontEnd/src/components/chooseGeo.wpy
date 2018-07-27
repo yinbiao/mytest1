@@ -1,0 +1,148 @@
+<template>
+  <!-- <view class="container"> -->
+
+   <view class="flex3">
+
+      <view class="zan-panel flex3Item">
+        
+        <repeat for="{{province}}">
+          <view class="zan-cell zan-cell--access {{selectedItem[0]==index?'selected':''}}" @tap='tapProvince({{item.id}},{{index}})'>
+            <view class="zan-cell__bd">{{item.shortName}}</view>
+          </view>
+        </repeat>
+
+      </view>
+
+      <view class="zan-panel flex3Item" wx:if="{{city.length}}">
+        
+        <repeat for="{{city}}">
+          <view class="zan-cell zan-cell--access {{selectedItem[1]==index?'selected':''}}" @tap='tapCity({{item.id}},{{index}})'>
+            <view class="zan-cell__bd">{{item.shortName}}</view>
+          </view>
+        </repeat>
+
+      </view>
+
+      <view class="zan-panel flex3Item" wx:if="{{district.length}}">
+        
+        <repeat for="{{district}}">
+          <view class="zan-cell zan-cell--access {{selectedItem[2]==index?'selected':''}}" @tap='tapDistrict({{item.id}},{{index}})'>
+            <view class="zan-cell__bd">{{item.shortName}}</view>
+          </view>
+        </repeat>
+
+      </view>
+
+
+
+   </view>
+
+  <!-- </view> -->
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import http from '../utils/http.js'
+  export default class ChooseGeo extends wepy.component {
+    config = {
+      navigationBarTitleText: 'dev nav',
+      enablePullDownRefresh: true,
+      backgroundTextStyle: 'dark',
+      backgroundColor: '#ffffff'
+    }
+      
+    data={
+      province:[],
+      city:[],
+      district:[],
+      selectedItem:[]
+    }
+
+    methods={
+      tapProvince(id,index){
+        console.log('tapProvince=> ',index)
+        this.selectedItem[0]=index
+        this.selectedItem[1]=null
+        this.selectedItem[2]=null
+
+        this.district.length=0
+        this.fetchCity(id)
+      },
+      tapCity(id,index){
+        //console.log(e,this)
+        this.selectedItem[1]=index
+        this.selectedItem[2]=null
+        this.fetchDistrict(id)
+      },
+      tapDistrict(id,index){
+        this.selectedItem[2]=index
+        let choosedGeo={
+          province:this.province[this.selectedItem[0]],
+
+          city:this.city[this.selectedItem[1]],
+
+          district:this.district[this.selectedItem[2]]
+          
+        }
+        // this.$parent.$parent.currentCity={
+        //   id:
+        // }
+        //console.log('选择了=> ',this.province[this.selectedItem[0]],this.city[this.selectedItem[1]],this.district[this.selectedItem[2]])
+        this.$emit('choosedGeo',choosedGeo)
+      }
+    };
+
+    fetchProvince(e){
+         const _this=this
+         // console.log('this=>',this)
+        http.get('/user/province')
+        .success(res=>{
+          this.province=res.data;
+          //console.log(this)
+          this.$apply()
+        })
+      }
+
+    fetchCity(e){
+         const _this=this
+         // console.log('this=>',this)
+        http.get('/user/city',{parentId:e})
+        .success(res=>{
+          this.city=res.data
+          //console.log(this)
+          this.$apply()
+        })
+      }
+
+    fetchDistrict(e){
+         const _this=this
+         // console.log('this=>',this)
+        http.get('/user/district',{parentId:e})
+        .success(res=>{
+          this.district=res.data
+          //console.log(this)
+          this.$apply()
+        })
+      }
+
+    onLoad(e){
+      //console.log(this,e)
+      this.fetchProvince()
+    }
+  }
+</script>
+
+<style lang="less">
+ .selected{
+  background:#f0f0f0;
+ }
+ .flex3{
+  display:flex;
+  .flex3Item{
+    flex:1 1 auto;
+    border-right:1px solid #f0f0f0;
+    height:500px;
+    overflow-y:scroll;
+  }
+ }
+</style>

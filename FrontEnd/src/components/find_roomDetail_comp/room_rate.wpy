@@ -1,0 +1,101 @@
+<template>
+  <view class="room-rate">
+    <!--灰色背景小星星-->
+    <view class="gray-background star">
+      <image wx:for="{{imGray}}"
+             class="img-block"
+             src="https://assets.mgzf.com/appimg/eb1d5a8fc6636f08a3407b9a072d5510.png"
+             wx:for-index="index"
+             wx:for-item="item"
+             wx:key="key">
+      </image>
+    </view>
+    <view class="orange-star star">
+      <!--满星-->
+      <view class="full">
+        <image wx:for="{{fullStar}}"
+               class="img-block"
+               src="https://assets.mgzf.com/appimg/37bfcfa45f4a35269dc72261388c9471.png"
+               wx:for-index="index"
+               wx:for-item="item"
+               wx:key="key">
+        </image>
+      </view>
+      <!--非满星-->
+      <view class="non-full"
+            style="width: {{nonFullStar * 20}}rpx">
+        <view class="image"></view>
+      </view>
+    </view>
+  </view>
+</template>
+<script>
+  import wepy from 'wepy'
+  export default class RoomRate extends wepy.component {
+    props = {
+      item: Object
+    }
+    methods = {
+    }
+    data = {
+      imGray: ['', '', '', '', '']
+    }
+    computed = {
+      fullStar () {
+        let tmpList = []
+        if (this.item) {
+          for (let i = 0; i < parseInt(this.item.serviceScore); i++) {
+//            console.log(i)
+            tmpList.push('SeanMade')
+          }
+        }
+        return tmpList
+      },
+      nonFullStar () {
+        if (this.item) {
+          return ((this.item.serviceScore + '').indexOf('.') > 0) ? Number('0.' + (this.item.serviceScore + '').split('.')[1]) : 0
+        }
+      }
+    }
+    onLoad() {
+    }
+  }
+</script>
+<style lang="less">
+  .room-rate {
+    position: relative;
+    .img-block {
+      display: inline-block;
+      margin-right: 8rpx;
+    }
+    .star {
+      width: 145rpx;
+      image {
+        width: 20rpx;
+        height: 20rpx;
+      }
+    }
+    .orange-star {
+      position: absolute;
+      top: 0;
+      left: 7rpx;
+      text-align:left;
+      .full {
+        display: inline-block;
+      }
+      .non-full {
+        width: 20rpx;
+        height: 20rpx;
+        display: inline-block;
+        overflow: hidden;
+        .image {
+          width: 20rpx;
+          height: 20rpx;
+          background-repeat: no-repeat;
+          background: url('https://assets.mgzf.com/appimg/37bfcfa45f4a35269dc72261388c9471.png');
+          background-size: 20rpx;
+        }
+      }
+    }
+  }
+</style>

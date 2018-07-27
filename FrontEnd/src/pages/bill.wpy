@@ -1,0 +1,127 @@
+<template>
+  <view class="container">
+    <view class="zan-tab__bd">
+      <view class="zan-tab__item {{tabIndex == 0?'zan-tab__item--selected':'' }}" @tap="tapTab(0)">
+        <view class="zan-tab__title">未支付</view>
+      </view>
+      <view class="zan-tab__item {{tabIndex == 1?'zan-tab__item--selected':'' }}" @tap="tapTab(1)">
+        <view class="zan-tab__title">已支付</view>
+      </view>
+    </view>
+    <!-- 未支付 -->
+    <view class="zan-panel zan-cell--access" wx:if="{{tabIndex == 0}}">
+      <radio-group class="radio-group" bindchange="radioChange">
+        <view class="zan-cell" wx:for="{{unpayBill}}">
+          <radio value="{{index}}" checked="{{index == 0}}" />
+          <view class="zan-cell__bd">
+            <view class="zan-cell__text">{{item.amount}}元 平台费</view>
+            <view class="zan-cell__desc">{{item.timestamp}}</view>
+          </view>
+          <view class="zan-cell__ft" @tap="tapToPage({{item}})">
+            <text class="color:red;">未支付</text>
+          </view>
+        </view>
+      </radio-group>
+    </view>
+    <view class="zan-panel zan-cell--access" wx:if="{{tabIndex == 1}}">
+      <view class="zan-cell" wx:for="{{payedBill}}">
+        <view class="zan-cell__bd">
+          <view class="zan-cell__text">{{item.amount}}元 平台费</view>
+          <view class="zan-cell__desc">{{item.timestamp}}</view>
+        </view>
+        <view class="zan-cell__ft" @tap="tapToPage({{item}})">
+          <text>已支付</text>
+        </view>
+      </view>
+    </view>
+    <!-- 未支付 -->
+    <veiw class='pay' wx:if="{{unpayBill.length && tabIndex == 0}}">
+      <!-- <button type="primary" @tap="primary"> 微信支付 </button> -->
+      <button class="zan-btn zan-btn--primary" @tap="tapPay({{unpayBill[radioIndex].id}})">
+        <view class='icons-wx'></view> 微信支付 {{unpayBill[radioIndex].amount}} 元 </button>
+    </veiw>
+  </view>
+</template>
+<script>
+import wepy from 'wepy'
+import http from '../utils/http.js'
+export default class Bill extends wepy.page {
+  config = {
+    navigationBarTitleText: '账单',
+    enablePullDownRefresh: true
+  }
+  data = {
+    tabIndex: 0,
+    radioIndex: 0,
+    payedBill: [],
+    unpayBill: [],
+    billItems: [{
+      platformFee: '560',
+      customerName: '向阳'
+    }, {
+      platformFee: '388',
+      customerName: '关思彗'
+    }]
+  }
+
+  methods = {
+    tapTab(index) {
+      this.tabIndex = index
+    },
+    radioChange(e) {
+      this.radioIndex = e.detail.value
+      console.log(this.radioIndex)
+    },
+    tapToPage(item) {
+      const params = { orderId:item.orderId }
+      this.$navigate("my_customerDetail", params)
+    },
+    tapPay(billId,e) {
+      //获取支付签名
+      http.post('/order/pay',{billId}).success(res => {
+        //调起客户端支付
+        let data={
+          'success': function(res) {},
+          'fail': function(res) {},
+          'complete': function(res) {},
+          ...res.data
+        }
+        wx.requestPayment(data)
+      })
+    }
+  }
+  initData(){
+    http.get('/order/bill').success(res => {
+      //orderId amount payerId receiverId commet timestamp state
+      this.payedBill = res.data.payedBill
+      this.unpayBill = res.data.unpayBill
+      this.$apply()
+    })
+  }
+  onShow(){
+    this.initData.call(this)
+  }
+  onLoad(params) {
+    
+  }
+
+
+
+
+
+}
+
+</script>
+<style lang="less">
+.pay {
+  position: fixed;
+  bottom: 0;
+  left: 0px;
+  right: 0px;
+}
+
+.zan-cell radio {
+  margin-right: 10rpx;
+}
+
+</style>

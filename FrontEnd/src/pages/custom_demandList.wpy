@@ -1,0 +1,226 @@
+<template>
+  <view class="container">
+    <!-- <swiper indicator-dots="{{indicatorDots}}" style="height:150px;" autoplay="{{autoplay}}" interval="{{interval}}" duration="{{duration}}">
+  <block wx:for="{{imgUrls}}">
+    <swiper-item>
+      <image src="{{item}}" class="slide-image" style="width:100%" width="355" height="150" />
+    </swiper-item>
+  </block>
+</swiper>
+ -->
+    <DemandFilterBar @searchDataEvent="searchDataEvent" />
+    <view style="margin-top:100rpx;">
+      <repeat for="{{demand}}">
+        <view class="demandItem" @tap.stop="gotoDemandDetail({{item.id}})">
+          <view class="mg-cell space-between" style="margin-bottom:10rpx;">
+            <view class="">
+              <view class="demandItemIcon">
+                <image mode="aspectFill" src='{{item.avatarUrl}}' />
+              </view>
+              <view class="demandItemL1">
+                <view>
+                  <text class="demandItemName">{{item.name || item.nickName}}</text>
+                </view>
+                <view>
+                  <text class="demandItemCompany">{{item.companyName}}</text>
+                </view>
+              </view>
+            </view>
+            <view class="demandItemTime">
+              <text>{{item.timestamp}}</text>
+            </view>
+          </view>
+          <view class="mg-cell space-between">
+            <view class="demandItemL2">
+              <text>客户：</text>{{item.customerName}}
+              <text class="demandItemTag1" wx:if="{{item.degreeType ==3}}">急</text>
+            </view>
+            <view class="demandItemBudget">{{item.budgetMin}}~{{item.budgetMax}}万</view>
+          </view>
+          <view class="demandItemL2">
+            <view>
+              <text>物业类型：</text>{{item.propertyTypeName}}</view>
+            <view>
+              <text>目标区域：</text>{{item.cityName}} {{item.districtNames}}</view>
+          </view>
+        </view>
+      </repeat>
+    </view>
+    <view class="home-button" @tap="addCustomDemand" wx:if="{{userInfo.permission.postDemand}}">
+      <view>发布</view>
+      <view>需求</view>
+    </view>
+  </view>
+</template>
+<script>
+import wepy from 'wepy'
+import http from '../utils/http.js'
+import DemandFilterBar from '../components/demandFilterBar'
+import C from '../constant/index.js'
+
+export default class CustomDemandList extends wepy.page {
+  config = {
+    navigationBarTitleText: '客户需求列表',
+    enablePullDownRefresh: true
+  }
+
+  components = {
+    DemandFilterBar
+  }
+  computed = {
+    userInfo() {
+      return this.$parent.globalData.userInfo
+    }
+  }
+  data = {
+    urlParams: {},
+    demand: []
+  }
+
+  events = {
+    searchDataEvent(params) {
+      console.error('searchDataEvent params==>>', params)
+      this.fetchDemandList(params)
+    }
+  }
+
+  methods = {
+    gotoDemandDetail(demandId) {
+      this.$navigate('./custom_demandDetail', { demandId })
+    },
+    addCustomDemand() {
+      this.$navigate('./add_customer')
+    }
+  }
+
+
+  onLoad(params) {
+    if (params.mine) {
+      wx.setNavigationBarTitle({
+        title: '我发布的需求列表'
+      })
+    }
+    this.urlParams = params
+    this.fetchDemandList(params)
+  }
+
+  fetchDemandList(params = {}) {
+    //const cityId = this.$parent.globalData.currentCity.id
+    // const userInfo =this.$parent.userInfo
+    // console.log(this)
+    // console.error(this)
+    const handsType = 0 //刚进入界面的时候是新房
+    let data = {
+      //cityId,
+      handsType,
+      ...this.urlParams,
+      ...params,
+
+    }
+    http.get('/demand/list', data)
+      .success(res => {
+        this.demand = res.data.map(v => {
+          return {
+            ...v,
+            timestamp: new Date(v.timestamp).toJSON().replace('T', ' ').substring(0, 19),
+            propertyTypeName: v.propertyType && C.propertyType[v.propertyType].name
+          }
+        })
+        this.$apply()
+      })
+  }
+  onPullDownRefresh(){
+    console.log('onPullDownRefresh')
+    wx.stopPullDownRefresh()
+  }
+}
+
+</script>
+<style lang="less">
+.home-button {
+  width: 80rpx;
+  height: 80rpx;
+  position: fixed;
+  bottom: 100rpx;
+  right: 40rpx;
+  background-color: #f68954;
+  text-align: center;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 27rpx;
+  line-height: 40rpx;
+  padding: 10rpx;
+}
+
+.container {
+  background-color: #ffffff;
+  .demandItemBudget {
+    color: #f65000;
+    font-weight: bold;
+  }
+  .space-between {
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .demandItemIcon {
+    width: 96rpx;
+    height: 96rpx;
+    border-radius: 100rpx;
+    display: block;
+    position: absolute;
+    font-size: 60rpx;
+    text-align: center;
+    color: #aaa;
+    top: -14rpx;
+    background-size: 200%;
+    image {
+      width: 96rpx;
+      height: 96rpx;
+      border-radius: 100rpx;
+    }
+  }
+
+  .demandItemL1 {
+    margin-left: 120rpx;
+  }
+  .demandItem {
+    color: #555;
+    padding: 30rpx 0;
+    margin: 0 40rpx;
+    border-bottom: 1rpx solid #ddd;
+    font-size: 26rpx;
+  }
+  .demandItemL2 text,
+  .demandItemCompany,
+  .demandItemTime {
+    font-size: 26rpx;
+    color: #777;
+  }
+  .demandItemL2 .demandItemTag1 {
+    top: 10rpx;
+    background-color: #f65000;
+    color: #ffffff;
+    padding: 0 6rpx;
+    border-radius: 100rpx;
+    font-size: 22rpx;
+    position: relative;
+    top: -6rpx;
+  }
+
+
+
+  .recommendTitle {
+    font-size: 36rpx;
+    color: #323232;
+    margin: 0 40rpx;
+    text-align: left;
+    line-height: 60rpx;
+  }
+  .hide {
+    display: none;
+    height: 0;
+    overflow: hidden;
+  }
+}
+
+</style>

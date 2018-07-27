@@ -1,0 +1,320 @@
+<template>
+  <view class="container">
+    <!-- <view>筛选项：中介、楼盘  区域、时间、维护人经理和业务员、成交量、平台费</view> -->
+    <view class="filterItems">
+      <!-- 中介、楼盘 -->
+      <picker class='fItem' bindchange="bindPickerChange" value="{{vipIndex}}" range="{{vipArray}}">
+        <view class="picker">
+          {{vipArray[vipIndex]}}
+          <i class="icon-triangle"></i>
+        </view>
+      </picker>
+      <!-- 区域 -->
+      <view class='fItem' @tap="tapDistrict">{{district}} <i class="icon-triangle"></i></view>
+      <!-- 时间 -->
+      <view class='fItem' @tap="tapDate">{{dateRange}} <i class="icon-triangle"></i></view>
+    </view>
+    <view class='filterPanel' wx:if="{{isHideDate}}">
+      <picker class='fItem' mode="date" value="{{date}}" bindchange="bindDateChange('dateStart')">
+        开始时间 {{dateStart}}
+      </picker>
+      <picker class='fItem' mode="date" value="{{date}}" bindchange="bindDateChange('dateEnd')">
+        结束时间 {{dateEnd}}
+      </picker>
+    </view>
+    <!-- 目标区域 -->
+    <view class="{{ showDistrict ? 'showChoosedGeo' : 'hideChoosedGeo' }}">
+      <ChooseGeoMultiple @choosedGeo="choosedGeo2" multiple="0" >
+    </view>
+  </view>
+  </view>
+</template>
+<script>
+import wepy from 'wepy'
+import http from '../utils/http.js'
+import C from '../constant/index.js'
+import ChooseGeoMultiple from '../components/chooseGeoMultiple'
+
+export default class VipList extends wepy.page {
+  config = {
+    navigationBarTitleText: '会员管理',
+    enablePullDownRefresh: true
+  }
+  components = {
+    ChooseGeoMultiple
+  }
+  data = {
+    isHideDate: false,
+    dateStart: '',
+    dateEnd: '',
+
+    vipArray: ['楼盘', '中介'],
+    vipIndex: 0,
+
+    showDistrict: false,
+
+    district:'区域',
+    // date:'日期',
+
+    chooseConfirmItem:{
+     
+    }
+  }
+  computed={
+     dateRange(){
+        let data
+        if(!this.dateStart && !this.dateEnd){
+          data='日期'
+        }else{
+          data= [this.dateStart,this.dateEnd].join()  
+        }
+        return data
+      }
+  }
+  events = {
+    choosedGeo2(choosed) {
+      this.showDistrict = false
+      //this.chooseConfirmItem.district = choosed
+      let item = this.chooseConfirmItem
+      const { province, city, district } = choosed
+      item.provinceId = province.id
+      item.provinceName = province.shortName
+      item.cityId = city.id
+      item.cityName = city.shortName
+      item.districtIds = Object.values(district).map(v => {
+        return v.id
+      })
+      item.districtNames = Object.values(district).map(v => {
+        return v.shortName
+      })
+      this.district=item.districtNames.join()
+      this.$apply()
+    },
+  }
+  methods = {
+    tapDistrict(){
+      this.showDistrict=!this.showDistrict
+    },
+    tapDate() {
+      this.isHideDate = !this.isHideDate
+
+    },
+    bindDateChange(key, e) {
+      this[key] = e.detail.value
+
+      console.log(e.detail.value)
+    },
+    bindPickerChange(e){
+      this.vipIndex=e.detail.value
+    }
+  }
+
+  onLoad() {
+    this.initData()
+  }
+  initData() {
+    // http.get('/user/verifyList').success(res => {
+    //   this.myVerifyList = res.data
+
+    //   // .map(v => {
+    //   //   v.allImgs = [v.busLicenseImage, v.coparationImg]
+    //   //   return v
+    //   // });
+    //   console.log(this.myVerifyList);
+    //   this.$apply();
+    // });
+  }
+
+  onPullDownRefresh() {
+    console.log('onPullDownRefresh')
+    wx.stopPullDownRefresh()
+  }
+}
+
+</script>
+<style lang="less">
+.showChoosedGeo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+}
+
+.hideChoosedGeo {
+  display: none;
+}
+
+.filterItems,
+.filterPanel {
+  display: flex;
+  padding: 12px 0;
+  background: white;
+  border-bottom: 1px solid #eee;
+  color: #444;
+}
+
+.fItem {
+  flex: 1;
+  text-align: center;
+  border-right: 1px solid #efefef;
+  font-size: 28rpx;
+  white-space: nowrap;
+}
+
+.filterItems>view {}
+
+.inline {
+  display: inline-block;
+}
+
+.zan-panel {
+  padding-top: 10px;
+}
+
+.contain {
+  height: 100%;
+  background: #f4f4f4;
+}
+
+.home-button {
+  width: 80rpx;
+  height: 80rpx;
+  position: fixed;
+  bottom: 100rpx;
+  right: 40rpx;
+  background-color: #f68954;
+  text-align: center;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 27rpx;
+  line-height: 40rpx;
+  padding: 10rpx;
+}
+
+
+.zan-popup__container {
+  text-align: center;
+}
+
+.zan-btns {
+  margin: 0;
+}
+
+.zan-dialog--container {
+  position: fixed;
+  top: 45%;
+  left: 50%;
+  width: 80%;
+  height: 0;
+  font-size: 16px;
+  overflow: hidden;
+  transition: all .2s linear;
+  border-radius: 4px;
+  background-color: #fff;
+  transform: translate3d(-50%, -50%, 0);
+  color: #333;
+  opacity: 0;
+  z-index: 1
+}
+
+.zan-dialog--mask {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, .6);
+  transition: .3s;
+  display: none;
+  z-index: 1
+}
+
+.zan-dialog__header {
+  padding: 15px 0 0;
+  text-align: center
+}
+
+.zan-dialog__content {
+  position: relative;
+  padding: 15px 20px;
+  line-height: 1.5;
+  min-height: 40px
+}
+
+.zan-dialog__content::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 200%;
+  transform: scale(.5);
+  transform-origin: 0 0;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 0 solid #e5e5e5;
+  border-bottom-width: 1px
+}
+
+.zan-dialog__content--title {
+  color: #999;
+  font-size: 14px
+}
+
+.zan-dialog__footer {
+  overflow: hidden
+}
+
+.zan-dialog__button {
+  line-height: 50px;
+  height: 50px;
+  padding: 0 5px;
+  border-radius: 0;
+  margin-bottom: 0
+}
+
+.zan-dialog__button::after {
+  border-width: 0;
+  border-radius: 0
+}
+
+.zan-dialog--show .zan-dialog--container {
+  opacity: 1;
+  height: auto
+}
+
+.zan-dialog--show .zan-dialog--mask {
+  display: block
+}
+
+.zan-dialog__footer--horizon {
+  display: flex
+}
+
+.zan-dialog__footer--horizon .zan-dialog__button {
+  flex: 1
+}
+
+.zan-dialog__footer--horizon .zan-dialog__button::after {
+  border-right-width: 1px
+}
+
+.zan-dialog__footer--horizon .zan-dialog__button:last-child::after {
+  border-right-width: 0
+}
+
+.zan-dialog__footer--vertical .zan-dialog__button {
+  flex: 1
+}
+
+.zan-dialog__footer--vertical .zan-dialog__button::after {
+  border-bottom-width: 1px
+}
+
+.zan-dialog__footer--vertical .zan-dialog__button:last-child::after {
+  border-bottom-width: 0
+}
+
+</style>

@@ -1,0 +1,64 @@
+<template>
+  <view class="container">
+    <view class="zan-panel-title">报备规则</view>
+    <view class="zan-panel zan-panel--without-border">
+      <view style="padding: 15px;">
+        {{ruleReport}}
+      </view>
+    </view>
+
+    <view class="zan-panel-title">判客规则</view>
+    <view class="zan-panel zan-panel--without-border">
+      <view style="padding: 15px;">
+        {{ruleJudge}}
+      </view>
+    </view>
+
+    <!-- <view class="zan-panel">
+      <view class="zan-cell zan-cell--access">
+        <text class="zan-icon zan-icon-records zan-c-blue" style="color:#0b4;margin-right:6px;"></text>
+        <view class="zan-cell__bd">报备规则</view>
+        <view class="zan-cell__ft"></view>
+      </view>
+      <view class="zan-cell zan-cell--access">
+        <text class="zan-icon zan-icon-contact" style="color:green;margin-right:6px;"></text>
+        <view class="zan-cell__bd">判客规则</view>
+        <view class="zan-cell__ft"></view>
+      </view>
+    </view> -->
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import http from '../utils/http.js'
+  export default class RuleNote extends wepy.page {
+    config = {
+      navigationBarTitleText: '规则'
+    }
+    data = {
+      buildingId:0,
+      ruleReport:'',
+      ruleJudge:''
+    }
+    onLoad(params){
+      this.buildingId=params.buildingId
+      http.get(`/building?id=${params.buildingId||1}`,{
+
+      }).success(res=>{
+        const data=res.data[0];
+        const nullString='无'
+        this.ruleReport=data.ruleReport||nullString,
+        this.ruleJudge=data.ruleJudge||nullString
+      })
+    }
+    onPullDownRefresh(){
+    console.log('onPullDownRefresh')
+    wx.stopPullDownRefresh()
+  }
+  }
+</script>
+
+<style lang="less">
+  
+</style>

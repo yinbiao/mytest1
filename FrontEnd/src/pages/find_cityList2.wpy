@@ -1,0 +1,399 @@
+<template>
+  <view class="container">
+    <view class="gps"  data-text="{{city}}" bindtap = "wxSortPickerViewItemTap">
+    {{city}} <text class="gpsif">GPS定位</text>
+    <view class="dw" catchtap ="cxgps">
+        <image style="width: 30px; height: 30px;position: absolute;top: 50%;left:40px;margin-top: -15px " src="{{src}}"></image>
+    </view>
+</view>
+
+
+<block wx:if="{{isShowLetter}}">
+    <view class="showSlectedLetter">
+        {{showLetter}}
+    </view>
+</block>
+<view class="searchLetter touchClass" >
+    <view wx:for="{{searchLetter}}" style="height:{{itemH}}px" wx:key="index" data-letter="{{item.name}}" catchtouchstart="searchStart" catchtouchmove="searchMove" catchtouchend="searchEnd">{{item.name}}</view>
+</view>
+<scroll-view scroll-y="true" style="height:{{winHeight}}px" bindscroll="bindScroll"  scroll-into-view="{{showLetter}}">
+
+    <view class="selection" wx:for="{{cityList}}" wx:key="{{item.initial}}"  id="{{item.initial}}">
+        <block wx:if="{{index===0}}" >
+            <block wx:if="{{cityArr.length}}" >
+                <view style="margin-left: 15px">
+                    <text class="hor" >历史访问</text>
+                    <view>
+                        <block  wx:for="{{cityArr}}" wx:for-item="cityName">
+                            <view  class="kuai" data-text="{{cityName}}" bindtap = "wxSortPickerViewItemTap">{{cityName}}</view>
+                        </block>
+                    </view>
+                </view>
+            </block>
+
+            <view style="margin-left: 15px;margin-bottom: 15px">
+                <text class="hor" >国内热门城市</text>
+                <view >
+                    <view class="kuai" data-text="北京" bindtap = "wxSortPickerViewItemTap">北京</view>
+                    <view class="kuai" data-text="上海" bindtap = "wxSortPickerViewItemTap">上海</view>
+                    <view class="kuai" data-text="天津" bindtap = "wxSortPickerViewItemTap">天津</view>
+                    <view class="kuai" data-text="广州" bindtap = "wxSortPickerViewItemTap">广州</view>
+                    <view class="kuai" data-text="成都" bindtap = "wxSortPickerViewItemTap">成都</view>
+                    <view class="kuai" data-text="杭州" bindtap = "wxSortPickerViewItemTap">杭州</view>
+                    <view class="kuai" data-text="深圳" bindtap = "wxSortPickerViewItemTap">深圳</view>
+                    <view class="kuai" data-text="苏州" bindtap = "wxSortPickerViewItemTap">苏州</view>
+                    <view class="kuai" data-text="重庆" bindtap = "wxSortPickerViewItemTap">重庆</view>
+                    <view class="kuai" data-text="武汉" bindtap = "wxSortPickerViewItemTap">武汉</view>
+                    <view class="kuai" data-text="厦门" bindtap = "wxSortPickerViewItemTap">厦门</view>
+                    <view class="kuai" data-text="南京" bindtap = "wxSortPickerViewItemTap">南京</view>
+                </view>
+            </view>
+        </block>
+        <view class="item_letter">{{item.initial}}</view>
+        <view class="item_city" wx:for="{{item.cityInfo}}" wx:for-item="ct" wx:key="{{ct.id}}" wx:for-index="idx"  data-text="{{ct.city}}" bindtap = "wxSortPickerViewItemTap">
+            {{ct.city}}
+        </view>
+    </view>
+</scroll-view>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+
+  export default class FindCityList extends wepy.page {
+    config = {
+      navigationBarTitleText: '城市列表'
+    }
+
+    components = {
+    }
+
+    data = {
+        searchLetter: [],
+        showLetter: "",
+        winHeight: 0,
+        tHeight:0,
+        bHeight:0,
+        startPageY:0,
+        cityList:[],
+        isShowLetter:false,
+        scrollTop:0,
+        city:"",
+        cityArr:[],
+        src:'./dw.png'
+    }
+
+    methods = {
+      
+    }
+
+    onLoad() {
+     //历史选择，应该在缓存中记录，或者在在app中全局记录
+        //当前城市通过之前的页面穿过来或者调用定位
+        var c = '北京'
+        var cityArr = ['上海','北京']
+        this.setData({
+            cityArr: cityArr,
+            city:c
+        })
+        // 生命周期函数--监听页面加载
+        var searchLetter = city.searchLetter;
+        var cityList=city.cityList();
+        // console.log(cityInfo);
+
+        var sysInfo = wx.getSystemInfoSync();
+        console.log(sysInfo);
+        var winHeight = sysInfo.windowHeight;
+
+        //添加要匹配的字母范围值
+        //1、更加屏幕高度设置子元素的高度
+        var itemH = (winHeight-50) / searchLetter.length;
+        var tempObj = [];
+        for (var i = 0; i < searchLetter.length; i++) {
+            var temp = {};
+            temp.name = searchLetter[i];
+            temp.tHeight = i * itemH;
+            temp.bHeight = (i + 1) * itemH;
+
+            tempObj.push(temp)
+        }
+
+        this.setData({
+            winHeight: winHeight,
+            itemH: itemH,
+            searchLetter: tempObj,
+            cityList:cityList
+        })
+
+        console.log(this.data.cityInfo);
+    }
+    
+
+     searchStart(e) {
+        var showLetter = e.currentTarget.dataset.letter;
+        var pageY = e.touches[0].pageY;
+        this.setScrollTop(this,showLetter);
+        this.nowLetter(pageY,this);
+        this.setData({
+            showLetter: showLetter,
+            startPageY: pageY,
+            isShowLetter:true,
+        })
+    }
+    searchMove(e) {
+        var pageY = e.touches[0].pageY;
+        var startPageY=this.data.startPageY;
+        var tHeight=this.data.tHeight;
+        var bHeight=this.data.bHeight;
+        var showLetter = 0;
+        console.log(pageY);
+        if(startPageY-pageY>0){ //向上移动
+            if(pageY<tHeight){
+                // showLetter=this.mateLetter(pageY,this);
+                this.nowLetter(pageY,this);
+            }
+        }else{//向下移动
+            if(pageY>bHeight){
+                // showLetter=this.mateLetter(pageY,this);
+                this.nowLetter(pageY,this);
+            }
+        }
+    }
+    searchEnd(e) {
+        // console.log(e);
+        // var showLetter=e.currentTarget.dataset.letter;
+        var that=this;
+        setTimeout(function(){
+            that.setData({
+                isShowLetter:false
+            })
+        },1000)
+
+    }
+    nowLetter(pageY, that) {//当前选中的信息
+        var letterData = this.data.searchLetter;
+        var bHeight = 0;
+        var tHeight = 0;
+        var showLetter="";
+        for (var i = 0; i < letterData.length; i++) {
+            if (letterData[i].tHeight <= pageY && pageY<= letterData[i].bHeight) {
+                bHeight = letterData[i].bHeight;
+                tHeight = letterData[i].tHeight;
+                showLetter = letterData[i].name;
+                break;
+            }
+        }
+
+        this.setScrollTop(that,showLetter);
+
+        that.setData({
+            bHeight:bHeight,
+            tHeight:tHeight,
+            showLetter:showLetter,
+            startPageY:pageY
+        })
+    }
+    bindScroll(e){
+        console.log(e.detail)
+    }
+    setScrollTop(that,showLetter){
+        var scrollTop=0;
+        var cityList=that.data.cityList;
+        var cityCount=0;
+        var initialCount=0;
+        for(var i=0;i<cityList.length;i++){
+            if(showLetter==cityList[i].initial){
+                scrollTop=initialCount*30+cityCount*41;
+                break;
+            }else{
+                initialCount++;
+                cityCount+=cityList[i].cityInfo.length;
+            }
+        }
+        that.setData({
+            scrollTop:scrollTop-1558
+        })
+    }
+
+    bindCity(e){
+        var city=e.currentTarget.dataset.city;
+        this.setData({city:city})
+    }
+    wxSortPickerViewItemTap(e){
+        var  city = e.target.dataset.text;
+        //可以跳转了
+        console.log('选择了城市：',city);
+    }
+    cxgps(e) {
+        var that = this;
+        wx.getLocation({
+            type: 'wgs84',
+            success: function(res) {
+                var latitude = res.latitude;
+                var longitude = res.longitude;
+                ajaxGes(latitude,longitude)
+                    .then(function (data) {
+                        if(data.status === 'success'){
+                                that.setData({
+
+                                })
+                        }else{
+                            that.setData({
+                                city: '定位失败'
+                            })
+                        }
+                    })
+            },
+            fail:function (res) {
+                that.setData({
+                    city: '定位失败'
+                })
+            }
+        })
+    }
+
+    //经纬度定位获取站点
+   ajaxGes(lat, lng) {
+      //自己的定位接口
+      var url = '';
+
+      return new Promise(function (resolve, reject) {
+          wx.request({
+              url: url,
+              header: {
+                  'content-type': 'application/json'
+              },
+              success: function(res) {
+                  resolve(res.data);
+              },
+              fail:function (err) {
+                  reject(err);
+              }
+          })
+      })
+
+  }
+
+  }
+</script>
+
+<style lang="less">
+  /**index.wxss**/
+.dw{
+  position: absolute;
+  top:0;
+  right: 0;
+  width:100px;
+  height: 100%;
+}
+.wxSortPickerViewTag{
+  background-color: #f1f1f1;
+  font-size: 16px;
+  font-weight: bold;
+  color: #999999;
+  line-height: 30px;
+  height: 30px;
+  padding: 0 15px;
+}
+.wxSortPickerViewItem{
+  height: 40px;
+  line-height: 40px;
+  border-bottom: 1px solid #eee;
+  margin-left: 15px;
+  color: #444;
+}
+.hor{
+  font-size: 14px;
+  color: #999999;
+  font-weight: 500;
+  display: block;
+  padding: 14px 25px 5px 0px;
+}
+.kuai{
+  height: 30px;
+  width: 28%;
+  text-align: center;
+  line-height: 30px;
+  color: #444;
+  font-weight: 500;
+  display: inline-block;
+  margin: 10px 10px 0 0;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 2px;
+}
+.searchLetter{
+  position: fixed;
+  right: 0;
+  width: 20px;
+  height: 80%;
+  text-align: center;
+  justify-content: center;
+  display: flex;
+  flex-direction: column;
+  color: #666;
+  z-index: 1
+}
+.searchLetter view{
+  height: 70rpx;
+}
+.touchClass{
+  top: 50px;
+  margin-top: 35px;
+  right: 0;
+  background-color: #fff;
+  color: #1296db;
+  font-weight: 700;
+}
+.showSlectedLetter{
+  background-color: rgba(0, 0, 0,0.5);
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top:50%;
+  left: 50%;
+  margin: -50px;
+  width: 100px;
+  height: 100px;
+  border-radius:10px;
+  font-size: 26px;
+  z-index: 1
+}
+.selection{
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+}
+.item_letter{
+  display: flex;
+  background-color: #f8f8f8;
+  height: 30px;
+  padding-left: 10px;
+  align-items: center;
+}
+.item_city{
+  display: flex;
+  background-color: #fff;
+  height: 40px;
+  padding-left: 10px;
+  align-items: center;
+  border-bottom: 1px solid #f8f8f8
+}
+.gps{
+  position: relative;
+  height: 38px;
+  border-bottom: 1px solid #ccc;
+  border-top: 1px solid #ccc;
+  line-height: 38px;
+  padding-left: 15px;
+  font-size: 16px;
+}
+.gpsif {
+  font-size: 14px;
+  color: #ccc;
+}
+
+</style>
