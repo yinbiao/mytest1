@@ -5,7 +5,7 @@ const mysql = require('mysql')
 const dbConfig = require('../../db')
 const utils = require('../lib/utils.js')
 
-// console.warn(dbConfig)
+console.warn(dbConfig)
 const pool = mysql.createPool(dbConfig.dbConfig)
 
 // exports.connection = pool.getConnection(

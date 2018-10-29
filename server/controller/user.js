@@ -957,7 +957,7 @@ export default class User {
         }
 
         //4.前台菜单显示隐藏权限
-        const sql3 = "select m.*,r.id as roleId,r.departmentNum,r.parentRoleId,r.rank,r.name as roleName from user_role as ur inner join role as r on ur.roleId = r.id  inner join role_menu as rm on rm.roleId = r.id inner join menu as m on rm.menuId =m.id where ur.userId=? and m.type=0;"
+        const sql3 = "select m.*,r.id as roleId,r.departmentNum,r.parentRoleId,r.rank,r.name as roleName from user_role as ur inner join role as r on ur.roleId = r.id  inner join role_menu as rm on rm.roleId = r.id inner join menu as m on rm.menuId =m.id where ur.userId=?"
         const promise3 = await query(sql3, [promise1[0].id]).catch((err) => { utils.log(err) })
         let permission = {}
         // let roleName;
@@ -1077,7 +1077,7 @@ export default class User {
         }
 
         //8.前台菜单显示隐藏权限
-        const sql3 = "select m.*,r.id as roleId,r.departmentNum,r.parentRoleId,r.rank,r.name as roleName from user_role as ur inner join role as r on ur.roleId = r.id  inner join role_menu as rm on rm.roleId = r.id inner join menu as m on rm.menuId =m.id where ur.userId=? and m.type=0"
+        const sql3 = "select m.*,r.id as roleId,r.departmentNum,r.parentRoleId,r.rank,r.name as roleName from user_role as ur inner join role as r on ur.roleId = r.id  inner join role_menu as rm on rm.roleId = r.id inner join menu as m on rm.menuId =m.id where ur.userId=?"
         const promise3 = await query(sql3, [promise1[0].id]).catch((err) => { utils.log(err) })
         let permission = {}
         // let roleName;
@@ -1325,9 +1325,9 @@ export default class User {
     }
 
     static async city(req) {
-        const dbCols = ['parentId', 'level']
+        const dbCols = ['parent_id', 'level']
         let data = _.pick(req.query, dbCols)
-        if (data.parentId) { data.parentId = parseInt(data.parentId) }
+        if (data.parent_id) { data.parent_id = parseInt(data.parent_id) }
 
         //if(data.level==1){data['open']=1;}
         data['open'] = 1;
@@ -1346,9 +1346,9 @@ export default class User {
 
     static async district(req, res) {
 
-        const sql = 'SELECT id,name as value,shortName FROM hufangtong.cnarea_2016 where  parentId=? and open=1' //161793 默认调试上海
+        const sql = 'SELECT id,name as value,shortName FROM hufangtong.cnarea_2016 where  parent_id=? and open=1' //161793 默认调试上海
 
-        const promise = await query(sql, [req.query.parentId]).catch((err) => { utils.log(err) })
+        const promise = await query(sql, [req.query.parent_id]).catch((err) => { utils.log(err) })
         return promise
     }
 

@@ -2,7 +2,7 @@ var dbConfig = {
     database: 'hufangtong',
     host: 'localhost',
     user: 'root',
-    password: '123456'
+    password: 'root'
 };
 
 exports.dbConfig = dbConfig;

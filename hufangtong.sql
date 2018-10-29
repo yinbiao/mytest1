@@ -252,8 +252,10 @@ CREATE TABLE `role` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='角色表';
 
+
 LOCK TABLES `role` WRITE;
 /*!40000 ALTER TABLE `role` DISABLE KEYS */;
+/*
 INSERT INTO `role` VALUES (1,'超级管理员','平台');
 INSERT INTO `role` VALUES (2,'经理','平台');
 INSERT INTO `role` VALUES (3,'业务员-中介业务','平台');
@@ -265,6 +267,7 @@ INSERT INTO `role` VALUES (8,'超级管理员','楼盘');
 INSERT INTO `role` VALUES (9,'经理','楼盘');
 INSERT INTO `role` VALUES (10,'销售顾问','楼盘');
 INSERT INTO `role` VALUES (11,'游客', '游客');
+*/
 /*!40000 ALTER TABLE `role` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -566,7 +569,7 @@ CREATE TABLE `user_companygroup_role` (
 	`userId` INT(11) NOT NULL,
 	PRIMARY KEY (`id`)
 )
-COLLATE='utf8mb4_0900_ai_ci'
+COLLATE='utf8_bin'
 ENGINE=InnoDB
 ;
 
@@ -580,7 +583,7 @@ CREATE TABLE `tempUser` (
   `companyId` INT(11) NULL DEFAULT NULL,
 	PRIMARY KEY (`id`)
 )
-COLLATE='utf8mb4_0900_ai_ci'
+COLLATE='utf8_bin'
 ENGINE=InnoDB
 ;
 
@@ -598,7 +601,7 @@ CREATE TABLE `notice` (
 	`companyId` INT(11) NULL DEFAULT NULL,
 	PRIMARY KEY (`id`)
 )
-COLLATE='utf8mb4_0900_ai_ci'
+COLLATE='utf8_bin'
 ENGINE=InnoDB
 ;
 
@@ -616,7 +619,7 @@ CREATE TABLE `bill` (
 	`billNum` VARCHAR(255) NULL DEFAULT NULL,
 	PRIMARY KEY (`id`)
 )
-COLLATE='utf8mb4_0900_ai_ci'
+COLLATE='utf8_bin'
 ENGINE=InnoDB
 ;
 
@@ -625,7 +628,7 @@ ENGINE=InnoDB
 
 
 /*!40000 ALTER TABLE `cnarea_2016` DISABLE KEYS */;
-REPLACE INTO `cnarea_2016` (`id`, `parentId`, `level`, `area_code`, `zip_code`, `city_code`, `name`, `shortName`, `merger_name`, `pinyin`, `lng`, `lat`, `open`) VALUES
+REPLACE INTO `cnarea_2016` (`id`, `parent_id`, `level`, `area_code`, `zip_code`, `city_code`, `name`, `shortName`, `merger_name`, `pinyin`, `lng`, `lat`, `open`) VALUES
 	(1, 0, 0, 100000, 000000, '0', '中国', '中国', '中国', 'China', 116.368324, 39.915085, 0),
 	(2, 1, 1, 110000, 000000, '0', '北京', '北京', '中国,北京', 'Beijing', 116.405285, 39.904989, 0),
 	(3, 2, 2, 110100, 100000, '10', '北京市', '北京', '中国,北京,北京市', 'Beijing', 116.405285, 39.904989, 0),

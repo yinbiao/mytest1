@@ -106,7 +106,7 @@
     fetchCity(e){
          const _this=this
          // console.log('this=>',this)
-        http.get('/user/city',{parentId:e})
+        http.get('/user/city',{parent_id:e})
         .success(res=>{
           this.city=res.data
           //console.log(this)
@@ -117,7 +117,7 @@
     fetchDistrict(e){
          const _this=this
          // console.log('this=>',this)
-        http.get('/user/district',{parentId:e})
+        http.get('/user/district',{parent_id:e})
         .success(res=>{
           this.district=res.data
           //console.log(this)

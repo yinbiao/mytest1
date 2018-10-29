@@ -1,7 +1,7 @@
 const wepy = require('wepy').default
 
 let baseConfig = {
-  baseUrl: 'http://42.203.2.208:3002',
+  baseUrl: 'http://192.168.1.9:3002',
   method: 'GET',
   url: '',
   //data: {},

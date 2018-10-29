@@ -232,7 +232,7 @@ export default class DemandFilterBar extends wepy.component {
     const currentCity = wx.getStorageSync('currentCity')
     let data = {}
     // if(currentCity && currentCity.id){
-    //   data['parentId']=currentCity.id
+    //   data['parent_id']=currentCity.id
     // }
 
     http.get('/user/city', data)
